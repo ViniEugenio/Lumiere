@@ -2,7 +2,7 @@
 
 ## Visão Geral
 
-Projeto **Lumiere** desenvolvido em **.NET 10** seguindo os princípios de **Clean Architecture**, com separação rígida de responsabilidades entre camadas.
+Projeto **Lumiere** desenvolvido em **.NET 9** seguindo os princípios de **Clean Architecture**, com separação rígida de responsabilidades entre camadas.
 
 **Repositório:** `git@github.com:ViniEugenio/Lumiere.git`
 
