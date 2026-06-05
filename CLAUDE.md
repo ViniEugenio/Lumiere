@@ -284,6 +284,18 @@ Nenhuma camada deve violar as dependências estabelecidas pela Clean Architectur
 
 ---
 
+## Documentação da API (Swagger)
+
+- Utilizar **Swashbuckle.AspNetCore** para geração do spec e UI do Swagger
+- A UI **só deve ser exposta em ambientes não-produção** (Development, Staging/Homologação, etc.)
+- A lógica de ativação fica em `Extensions/SwaggerExtensions.cs` com dois métodos de extensão:
+  - `AddSwaggerDocs()` — registra os serviços via `AddSwaggerGen()`
+  - `UseSwaggerDocs()` — habilita `UseSwagger()` e `UseSwaggerUI()` se `!IsProduction()`
+- **Nunca habilitar em produção** — a condição é `IsProduction()` para bloquear, não `IsDevelopment()` para permitir
+- UI acessível em: `/swagger`
+
+---
+
 ## Infraestrutura
 
 ### Docker
