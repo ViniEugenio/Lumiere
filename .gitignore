@@ -1,0 +1,71 @@
+## Build outputs
+bin/
+obj/
+out/
+publish/
+
+## User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+.vs/
+
+## Visual Studio Code
+.vscode/
+!.vscode/extensions.json
+
+## JetBrains Rider
+.idea/
+*.sln.iml
+
+## NuGet
+*.nupkg
+*.snupkg
+**/[Pp]ackages/
+!**/[Pp]ackages/build/
+*.nuget.props
+*.nuget.targets
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+## .NET specific
+*.log
+*.cache
+launchSettings.json
+
+## Environment / secrets
+appsettings.Development.json
+appsettings.Production.json
+appsettings.Staging.json
+.env
+.env.*
+secrets.json
+**/secrets/
+
+## Docker overrides
+docker-compose.override.yml
+
+## OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+## Test results
+TestResults/
+coverage/
+*.trx
+*.coveragexml
+*.coverage
+
+## Entity Framework
+*.mdf
+*.ldf
+*.ndf
+
+## Temporary files
+*.tmp
+*.bak
+*.swp
+*~.nib

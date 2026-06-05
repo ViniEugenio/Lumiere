@@ -1,0 +1,12 @@
+appsettings.Development.json
+appsettings.Production.json
+appsettings.Staging.json
+appsettings.*.json
+
+**/.env
+**/.env.*
+**/secrets/
+**/secrets.json
+
+**/bin/
+**/obj/
