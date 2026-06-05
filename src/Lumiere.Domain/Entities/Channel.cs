@@ -1,6 +1,6 @@
 namespace Lumiere.Domain.Entities;
 
-public class Canal
+public class Channel
 {
     public int Id { get; private set; }
     public string Name { get; private set; } = string.Empty;
@@ -12,9 +12,9 @@ public class Canal
     public int UserId { get; private set; }
     public User User { get; private set; } = null!;
 
-    public static Canal Create(string name, string? description, int userId)
+    public static Channel Create(string name, string? description, int userId)
     {
-        return new Canal
+        return new Channel
         {
             Name = name,
             Description = description,

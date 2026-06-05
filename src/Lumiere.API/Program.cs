@@ -12,5 +12,6 @@ var app = builder.Build();
 
 app.UseSwaggerDocs();
 app.UseHttpsRedirection();
+app.AddEndpoints();
 
 app.Run();

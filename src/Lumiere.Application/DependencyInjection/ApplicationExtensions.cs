@@ -1,4 +1,6 @@
 using FluentValidation;
+using Lumiere.Application.Services.Implementations;
+using Lumiere.Application.Services.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Lumiere.Application.DependencyInjection;
@@ -11,6 +13,8 @@ public static class ApplicationExtensions
             cfg.RegisterServicesFromAssembly(typeof(ApplicationExtensions).Assembly));
 
         services.AddValidatorsFromAssembly(typeof(ApplicationExtensions).Assembly);
+
+        services.AddScoped<IUserService, UserService>();
 
         return services;
     }

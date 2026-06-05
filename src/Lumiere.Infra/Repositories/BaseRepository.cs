@@ -36,6 +36,19 @@ public class BaseRepository<TEntity>(AppDbContext context) : IBaseRepository<TEn
         return await query.FirstOrDefaultAsync();
     }
 
+    public async Task<bool> ExistsAsync(
+        params Expression<Func<TEntity, bool>>[] conditions)
+    {
+        IQueryable<TEntity> query = _dbSet.AsNoTracking();
+
+        foreach (var condition in conditions)
+        {
+            query = query.Where(condition);
+        }
+
+        return await query.AnyAsync();
+    }
+
     public async Task AddAsync(TEntity entity, CancellationToken cancellationToken = default)
     {
         await _dbSet.AddAsync(entity, cancellationToken);

@@ -42,7 +42,7 @@ public class AppDbContextFactory : IDesignTimeDbContextFactory<AppDbContext>
             Path.Combine(current, "src", "Lumiere.API"),
         };
 
-        return candidates.FirstOrDefault(p => File.Exists(Path.Combine(p, "appsettings.json")))
+        return candidates.FirstOrDefault(candidate => File.Exists(Path.Combine(candidate, "appsettings.json")))
             ?? current;
     }
 }

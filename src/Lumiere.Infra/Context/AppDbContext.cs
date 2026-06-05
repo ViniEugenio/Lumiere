@@ -7,7 +7,7 @@ namespace Lumiere.Infra.Context;
 
 public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbContext<User, IdentityRole<int>, int>(options)
 {
-    public DbSet<Canal> Canais => Set<Canal>();
+    public DbSet<Channel> Channels => Set<Channel>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

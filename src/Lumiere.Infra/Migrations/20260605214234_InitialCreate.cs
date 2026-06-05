@@ -162,7 +162,7 @@ namespace Lumiere.Infra.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Canais",
+                name: "Channels",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
@@ -176,9 +176,9 @@ namespace Lumiere.Infra.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Canais", x => x.Id);
+                    table.PrimaryKey("PK_Channels", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Canais_Users_UserId",
+                        name: "FK_Channels_Users_UserId",
                         column: x => x.UserId,
                         principalTable: "Users",
                         principalColumn: "Id",
@@ -213,8 +213,8 @@ namespace Lumiere.Infra.Migrations
                 column: "RoleId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Canais_UserId",
-                table: "Canais",
+                name: "IX_Channels_UserId",
+                table: "Channels",
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
@@ -249,7 +249,7 @@ namespace Lumiere.Infra.Migrations
                 name: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
-                name: "Canais");
+                name: "Channels");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");

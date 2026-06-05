@@ -1,6 +1,8 @@
+using Lumiere.Domain.Entities;
 using Lumiere.Domain.Interfaces;
 using Lumiere.Infra.Context;
 using Lumiere.Infra.Repositories;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -16,8 +18,12 @@ public static class InfrastructureExtensions
         services.AddDbContext<AppDbContext>(options =>
             options.UseSqlServer(configuration.GetConnectionString("Default")));
 
+        services.AddIdentityCore<User>()
+            .AddRoles<IdentityRole<int>>()
+            .AddEntityFrameworkStores<AppDbContext>();
+
         services.AddScoped<IUserRepository, UserRepository>();
-        services.AddScoped<ICanalRepository, CanalRepository>();
+        services.AddScoped<IChannelRepository, ChannelRepository>();
 
         return services;
     }

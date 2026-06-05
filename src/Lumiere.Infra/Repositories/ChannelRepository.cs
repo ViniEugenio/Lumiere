@@ -4,4 +4,4 @@ using Lumiere.Infra.Context;
 
 namespace Lumiere.Infra.Repositories;
 
-public class CanalRepository(AppDbContext context) : BaseRepository<Canal>(context), ICanalRepository;
+public class ChannelRepository(AppDbContext context) : BaseRepository<Channel>(context), IChannelRepository;

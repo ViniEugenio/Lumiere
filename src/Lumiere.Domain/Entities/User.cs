@@ -8,7 +8,7 @@ public class User : IdentityUser<int>
     public DateTime? UpdatedAt { get; private set; }
     public bool Active { get; private set; }
 
-    public ICollection<Canal> Canais { get; private set; } = [];
+    public ICollection<Channel> Channels { get; private set; } = [];
 
     public static User Create(string userName, string email)
     {

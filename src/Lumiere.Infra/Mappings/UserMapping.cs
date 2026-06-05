@@ -10,21 +10,21 @@ public class UserMapping : IEntityTypeConfiguration<User>
     {
         builder.ToTable("Users");
 
-        builder.Property(u => u.CreatedAt)
+        builder.Property(user => user.CreatedAt)
             .IsRequired()
             .HasColumnType("datetime2");
 
-        builder.Property(u => u.UpdatedAt)
+        builder.Property(user => user.UpdatedAt)
             .HasColumnType("datetime2");
 
-        builder.Property(u => u.Active)
+        builder.Property(user => user.Active)
             .IsRequired()
             .HasColumnType("bit")
             .HasDefaultValue(true);
 
-        builder.HasMany(u => u.Canais)
-            .WithOne(c => c.User)
-            .HasForeignKey(c => c.UserId)
+        builder.HasMany(user => user.Channels)
+            .WithOne(channel => channel.User)
+            .HasForeignKey(channel => channel.UserId)
             .OnDelete(DeleteBehavior.Restrict);
     }
 }

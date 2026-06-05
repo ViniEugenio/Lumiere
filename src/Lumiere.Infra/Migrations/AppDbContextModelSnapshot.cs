@@ -22,7 +22,7 @@ namespace Lumiere.Infra.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("Lumiere.Domain.Entities.Canal", b =>
+            modelBuilder.Entity("Lumiere.Domain.Entities.Channel", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -57,7 +57,7 @@ namespace Lumiere.Infra.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Canais", (string)null);
+                    b.ToTable("Channels", (string)null);
                 });
 
             modelBuilder.Entity("Lumiere.Domain.Entities.User", b =>
@@ -272,10 +272,10 @@ namespace Lumiere.Infra.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("Lumiere.Domain.Entities.Canal", b =>
+            modelBuilder.Entity("Lumiere.Domain.Entities.Channel", b =>
                 {
                     b.HasOne("Lumiere.Domain.Entities.User", "User")
-                        .WithMany("Canais")
+                        .WithMany("Channels")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -336,7 +336,7 @@ namespace Lumiere.Infra.Migrations
 
             modelBuilder.Entity("Lumiere.Domain.Entities.User", b =>
                 {
-                    b.Navigation("Canais");
+                    b.Navigation("Channels");
                 });
 #pragma warning restore 612, 618
         }

@@ -10,6 +10,9 @@ public interface IBaseRepository<TEntity> where TEntity : class
     Task<TEntity?> GetAsync(
         params Expression<Func<TEntity, bool>>[] conditions);
 
+    Task<bool> ExistsAsync(
+        params Expression<Func<TEntity, bool>>[] conditions);
+
     Task AddAsync(TEntity entity, CancellationToken cancellationToken = default);
 
     Task UpdateAsync(TEntity entity, CancellationToken cancellationToken = default);

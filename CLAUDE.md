@@ -71,6 +71,105 @@ Lumiere.API/
 
 ---
 
+## Convenções de Minimal APIs
+
+### EndpointBase
+
+Todos os endpoints devem herdar de `EndpointBase` (localizado em `Lumiere.API/Endpoints/EndpointBase.cs`).
+
+`EndpointBase` provê o método `HandleResult<T>(ResultDto<T> result)` para padronizar as respostas:
+- Sucesso → `Results.Ok(result.Data)`
+- Falha → `Results.BadRequest(result.Errors)`
+
+```csharp
+public abstract class EndpointBase
+{
+    protected static IResult HandleResult<T>(ResultDto<T> result)
+    {
+        if (result.IsSuccess)
+        {
+            return Results.Ok(result.Data);
+        }
+
+        return Results.BadRequest(result.Errors);
+    }
+}
+```
+
+Como `EndpointBase` é uma classe não-estática, as classes de endpoints também são não-estáticas e herdam dela. O método de mapeamento é estático mas **não é extension method** — o registro no `Program.cs` usa chamada direta: `UserEndpoints.MapUserEndpoints(apiRoutes)`.
+
+### Estrutura dos endpoints
+
+Cada funcionalidade deve ter sua própria classe dentro de `Endpoints/`, herdando de `EndpointBase`:
+
+```csharp
+public class UserEndpoints : EndpointBase
+{
+    public static IEndpointRouteBuilder MapUserEndpoints(IEndpointRouteBuilder endpoints)
+    {
+        var group = endpoints.MapGroup("users")
+            .RequireAuthorization();
+
+        group.MapGet("", GetAllUsers);
+        group.MapGet("{id}", GetUserById);
+        group.MapPost("", CreateUser);
+
+        return endpoints;
+    }
+}
+```
+
+### Registro no `Program.cs`
+
+Todos os grupos de endpoints são registrados sob o prefixo `api/`:
+
+```csharp
+var apiRoutes = app.MapGroup("api/");
+UserEndpoints.MapUserEndpoints(apiRoutes);
+```
+
+### Handlers (delegates)
+
+Os handlers são métodos estáticos privados dentro da mesma classe do grupo. Parâmetros são resolvidos pelo model binding do ASP.NET Core:
+
+```csharp
+private static async Task<IResult> CreateUser(
+    [FromServices] ISender sender,
+    [FromBody] CreateUserCommand command,
+    CancellationToken ct)
+{
+    var result = await sender.Send(command, ct);
+    return HandleResult(result);
+}
+```
+
+**Origens de parâmetros:**
+- `[FromServices]` — serviços injetados via DI
+- `[FromRoute]` — parâmetros de rota
+- `[FromQuery]` — parâmetros de query string
+- `[FromBody]` — corpo da requisição
+- `CancellationToken` — fornecido automaticamente pelo pipeline
+
+### Documentação OpenAPI
+
+Usar `[Tags]` para agrupar endpoints no Swagger e `.Produces()` para documentar os possíveis retornos:
+
+```csharp
+group.MapPost("", CreateUser)
+    .WithTags("Users")
+    .Produces(StatusCodes.Status200OK, typeof(UserDto))
+    .Produces(StatusCodes.Status400BadRequest)
+    .Produces(StatusCodes.Status401Unauthorized)
+    .Produces(StatusCodes.Status403Forbidden);
+```
+
+**Regras:**
+- `.Produces()` é apenas documentação — não valida nem força o retorno em tempo de execução
+- Endpoints com `RequireAuthorization()` devem documentar `401` e `403`
+- A tag deve corresponder ao nome do recurso (ex: `"Users"`, `"Products"`)
+
+---
+
 ## Lumiere.Domain
 
 Responsável pelas regras centrais do domínio.
@@ -103,19 +202,26 @@ Responsável pelos casos de uso da aplicação.
 - Commands e Queries separados
 - Utilizar **MediatR** para processamento dos requests
 - Toda regra de aplicação fica nesta camada
-- Services de aplicação para orquestrar processos de negócio quando necessário
+- **CommandHandlers não devem acessar repositórios diretamente** — o acesso a repositórios deve ocorrer exclusivamente pelos Application Services
+- **Services são responsáveis pela orquestração** das regras de negócio e conversão de resultados
+- **Repositórios são responsáveis apenas pela persistência** — não convertem erros em DTOs
+- Commands e Queries devem retornar `ResultDto<T>` quando precisam comunicar status de sucesso ou falha
+- DTOs usados para comunicação entre Application e API ficam em `Lumiere.Application/DTOs` — Features não devem criar subpastas `DTOs/` próprias sem justificativa forte
+- **Services devem receber Commands, Queries ou DTOs como parâmetro** — nunca uma lista de primitivos; ver regra de parâmetros abaixo
 - **Depende apenas do Domain**
 
 **Estrutura:**
 ```
 Lumiere.Application/
+├── DTOs/
 ├── Features/
 │   └── Users/
 │       ├── Commands/
 │       ├── Queries/
-│       ├── Handlers/
-│       └── DTOs/
+│       └── Handlers/
 ├── Services/
+│   ├── Interfaces/
+│   └── Implementations/
 ├── Behaviors/
 ├── Validators/
 └── DependencyInjection/
@@ -204,6 +310,30 @@ Task UpdateAsync(TEntity entity);
 
 ---
 
+## English-Only Convention
+
+Todo o código deve ser escrito em inglês. Isso inclui:
+
+- Nomes de classes, interfaces, métodos, propriedades, variáveis
+- Parâmetros, campos, DTOs, Commands, Queries, Validators, Services, Repositories
+- Chaves de recursos (resource keys)
+
+**Correto:**
+```csharp
+private readonly IUserRepository _userRepository;
+
+public async Task<ResultDto<object>> CreateUserAsync(...)
+```
+
+**Incorreto:**
+```csharp
+private readonly IUserRepository _repositorioUsuario;
+
+public async Task<ResultDto<object>> CriarUsuarioAsync(...)
+```
+
+---
+
 ## Injeção de Dependência
 
 Cada camada possui uma classe de extensão própria:
@@ -212,6 +342,118 @@ Cada camada possui uma classe de extensão própria:
 services.AddApplication();
 services.AddInfrastructure(configuration);
 ```
+
+---
+
+## Convenções de Parâmetros de Métodos
+
+Evitar métodos com excesso de parâmetros primitivos.
+
+**Regras:**
+- Até 2 parâmetros de negócio é aceitável
+- Quando um método requer mais de 2 parâmetros de negócio, encapsulá-los em um DTO, Command, Query ou Request
+- Preferir passar Commands, Queries ou DTOs em vez de múltiplos valores primitivos
+- Esta regra se aplica especialmente a Application Services
+- `CancellationToken` não conta para o limite — é um parâmetro de infraestrutura
+
+**Correto:**
+```csharp
+Task<ResultDto<object>> CreateUserAsync(
+    CreateUserCommand command,
+    CancellationToken cancellationToken);
+```
+
+**Incorreto:**
+```csharp
+Task<ResultDto<object>> CreateUserAsync(
+    string username,
+    string email,
+    string password,
+    string confirmPassword,
+    CancellationToken cancellationToken);
+```
+
+**Quando não existe Command ou Query adequado**, criar um DTO em `Lumiere.Application/DTOs` e usá-lo como entrada:
+
+```csharp
+// Application/DTOs/CreateUserDto.cs
+Task<ResultDto<object>> CreateUserAsync(
+    CreateUserDto dto,
+    CancellationToken cancellationToken);
+```
+
+---
+
+## Organização de Arquivos de Service
+
+Dentro dos Application Services, a ordem dos membros deve seguir:
+
+1. **Construtor** (via primary constructor na declaração da classe)
+2. **Métodos públicos** (implementações de interface) — aparecem primeiro no corpo da classe
+3. **Métodos privados auxiliares** — aparecem ao final da classe
+
+Validações internas do service devem ser implementadas como métodos privados.
+
+```
+UserService
+├── Primary Constructor
+├── Métodos Públicos (implementações de IUserService)
+└── Métodos Privados
+    ├── ValidateCreateUserAsync
+    ├── MapUser
+    └── Outros auxiliares
+```
+
+Esta convenção se aplica a todos os services futuros.
+
+---
+
+## Gerenciamento de Mensagens de Erro
+
+Mensagens de erro da camada Application **não devem ser hardcoded** dentro de Services, Commands, Queries, Validators ou Handlers.
+
+Todas as mensagens reutilizáveis devem ser armazenadas em:
+
+```
+Application
+└── Resources
+    └── Errors.resx
+```
+
+**Correto:**
+```csharp
+result.AddError(Errors.EmailAlreadyInUse);
+```
+
+**Incorreto:**
+```csharp
+result.AddError("Email is already in use.");
+```
+
+A estrutura de recursos é compatível com localização futura:
+```
+Resources
+├── Errors.resx         ← padrão (inglês)
+├── Errors.pt-BR.resx   ← futuro
+└── Errors.en-US.resx   ← futuro
+```
+
+---
+
+## Responsabilidade de Validação de Negócio
+
+**FluentValidation** deve ser usado apenas para validações de requisição:
+- Campos obrigatórios
+- Tamanho mínimo/máximo
+- Formato (e-mail, regex)
+- Senhas e confirmações
+
+**Validações que dependem de banco de dados** devem ser implementadas dentro dos Application Services como métodos privados:
+- Unicidade de username ou e-mail
+- Validações referenciais
+- Validações entre entidades
+
+Repositórios **não devem conter lógica de validação** — sua responsabilidade é exclusivamente persistência e consulta.
 
 ---
 
@@ -261,6 +503,33 @@ if (result is null)
 foreach (var item in items)
     Process(item);
 ```
+
+---
+
+## Nomenclatura de Parâmetros Lambda
+
+Evitar nomes de parâmetro de uma única letra ou genéricos em expressões lambda.
+
+**Correto:**
+```csharp
+users.Where(user => user.Email == email)
+channels.Any(channel => channel.Id == channelId)
+permissions.Any(permission => permission.Name == name)
+identityResult.Errors.Select(identityError => identityError.Description)
+```
+
+**Incorreto:**
+```csharp
+users.Where(u => u.Email == email)
+channels.Any(x => x.Id == channelId)
+identityResult.Errors.Select(e => e.Description)
+```
+
+Nomes genéricos proibidos: `x`, `y`, `z`, `u`, `e`, `i`. O nome deve refletir a entidade sendo processada **em inglês**. Esta convenção se aplica a todo o projeto.
+
+**Exceções aceitas:**
+- `_` como discard quando o parâmetro é intencionalmente ignorado: `.RuleFor(user => user.Active, _ => true)`
+- Arquivos auto-gerados (Migrations, Designer.cs) — nunca modificar manualmente
 
 ---
 
