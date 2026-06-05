@@ -4,7 +4,4 @@ using Lumiere.Infra.Context;
 
 namespace Lumiere.Infra.Repositories;
 
-public class CanalRepository : BaseRepository<Canal>, ICanalRepository
-{
-    public CanalRepository(AppDbContext context) : base(context) { }
-}
+public class CanalRepository(AppDbContext context) : BaseRepository<Canal>(context), ICanalRepository;

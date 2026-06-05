@@ -233,6 +233,7 @@ services.AddInfrastructure(configuration);
 
 - Sempre usar chaves `{}` em estruturas de controle, mesmo quando o corpo tiver apenas uma linha
 - Sempre pular uma linha antes de estruturas de controle (`if`, `for`, `foreach`, `while`, `switch`)
+- Sempre usar **primary constructor** quando a classe possuir um único construtor — inclusive ao passar parâmetros para a classe base
 
 **Correto:**
 ```csharp
