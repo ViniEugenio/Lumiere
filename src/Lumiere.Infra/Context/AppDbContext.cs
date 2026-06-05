@@ -5,10 +5,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Lumiere.Infra.Context;
 
-public class AppDbContext : IdentityDbContext<User, IdentityRole<int>, int>
+public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbContext<User, IdentityRole<int>, int>(options)
 {
-    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
-
     public DbSet<Canal> Canais => Set<Canal>();
 
     protected override void OnModelCreating(ModelBuilder builder)

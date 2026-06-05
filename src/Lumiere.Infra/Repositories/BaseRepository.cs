@@ -5,16 +5,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Lumiere.Infra.Repositories;
 
-public class BaseRepository<TEntity> : IBaseRepository<TEntity> where TEntity : class
+public class BaseRepository<TEntity>(AppDbContext context) : IBaseRepository<TEntity> where TEntity : class
 {
-    protected readonly AppDbContext _context;
-    protected readonly DbSet<TEntity> _dbSet;
-
-    public BaseRepository(AppDbContext context)
-    {
-        _context = context;
-        _dbSet = context.Set<TEntity>();
-    }
+    protected readonly AppDbContext _context = context;
+    protected readonly DbSet<TEntity> _dbSet = context.Set<TEntity>();
 
     public async Task<IEnumerable<TEntity>> GetAllAsync(
         params Expression<Func<TEntity, bool>>[] conditions)

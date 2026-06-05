@@ -6,8 +6,8 @@ namespace Lumiere.Tests.Setup;
 
 public class DatabaseFixture : IAsyncLifetime
 {
-    private readonly MsSqlContainer _container = new MsSqlBuilder()
-        .WithImage("mcr.microsoft.com/mssql/server:2022-latest")
+
+    private readonly MsSqlContainer _container = new MsSqlBuilder("mcr.microsoft.com/mssql/server:2022-latest")
         .Build();
 
     public AppDbContext DbContext { get; private set; } = null!;

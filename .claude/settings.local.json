@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem -Path \"D:\\\\reps\\\\Lumiere\\\\src\\\\Lumiere.API\" -Recurse)",
+      "Bash(Select-Object -Property FullName, PSIsContainer)",
+      "Bash(Sort-Object FullName)",
+      "Bash(dir /s /b \"D:\\\\reps\\\\Lumiere\\\\src\\\\Lumiere.API\\\\*.cs\")",
+      "Bash(findstr /v \"\\\\\\\\bin\\\\|\\\\\\\\obj\\\\\")",
+      "Bash(dotnet restore *)",
+      "Bash(dotnet build *)",
+      "Bash(dotnet remove *)",
+      "Bash(dotnet add *)"
+    ]
+  }
+}
