@@ -234,6 +234,9 @@ services.AddInfrastructure(configuration);
 - Sempre usar chaves `{}` em estruturas de controle, mesmo quando o corpo tiver apenas uma linha
 - Sempre pular uma linha antes de estruturas de controle (`if`, `for`, `foreach`, `while`, `switch`)
 - Sempre usar **primary constructor** quando a classe possuir um único construtor — inclusive ao passar parâmetros para a classe base
+- **Remover todos os `using` não utilizados** — nenhum import desnecessário deve permanecer no arquivo
+- **Manter indentação consistente** — usar 4 espaços em todo o projeto, sem misturar tabs e espaços
+- **Nomes devem ser descritivos e autoexplicativos** — classes, métodos, commands, queries e variáveis devem deixar clara a intenção sem precisar de comentário; evitar abreviações e nomes genéricos como `data`, `obj`, `temp`, `handler2`
 
 **Correto:**
 ```csharp
