@@ -310,6 +310,27 @@ Task UpdateAsync(TEntity entity);
 
 ---
 
+## Git Commit Convention
+
+Todos os commits devem ser escritos em inglês.
+
+Isso inclui título, corpo e qualquer descrição adicional da mensagem de commit.
+
+**Correto:**
+```
+feat: add user creation endpoint with FluentValidation
+fix: resolve duplicate email validation error
+refactor: move business validation logic to UserService
+```
+
+**Incorreto:**
+```
+feat: adicionar endpoint de criação de usuário
+fix: corrigir validação de email duplicado
+```
+
+---
+
 ## English-Only Convention
 
 Todo o código deve ser escrito em inglês. Isso inclui:
