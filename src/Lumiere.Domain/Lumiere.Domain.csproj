@@ -7,7 +7,17 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="ValueObjects - Copy\**" />
+    <EmbeddedResource Remove="ValueObjects - Copy\**" />
+    <None Remove="ValueObjects - Copy\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="ValueObjects\" />
   </ItemGroup>
 
 </Project>

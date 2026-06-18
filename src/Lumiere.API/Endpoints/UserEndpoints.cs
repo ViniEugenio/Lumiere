@@ -1,4 +1,3 @@
-using Lumiere.Application.DTOs;
 using Lumiere.Application.Features.Users.Commands;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;

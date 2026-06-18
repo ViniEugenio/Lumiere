@@ -6,7 +6,7 @@ public abstract class EndpointBase
 {
     protected static IResult HandleResult<T>(ResultDto<T> result)
     {
-        if (result.IsSuccess)
+        if (result.Succeeded)
         {
             return Results.Ok(result.Data);
         }

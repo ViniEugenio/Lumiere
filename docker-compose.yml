@@ -1,35 +1,31 @@
 services:
-  sqlserver:
-    image: mcr.microsoft.com/mssql/server:2022-latest
-    container_name: lumiere-sqlserver
-    environment:
-      SA_PASSWORD: "Lumiere@Str0ng!"
-      ACCEPT_EULA: "Y"
-      MSSQL_PID: "Developer"
-    ports:
-      - "1433:1433"
-    volumes:
-      - sqlserver_data:/var/opt/mssql
-    healthcheck:
-      test: ["CMD", "/opt/mssql-tools/bin/sqlcmd", "-S", "localhost", "-U", "sa", "-P", "Lumiere@Str0ng!", "-Q", "SELECT 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 30s
 
-  api:
+  lumiere.api:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: lumiere-api
-    ports:
-      - "8080:8080"
-    environment:
-      ASPNETCORE_ENVIRONMENT: Production
-      ConnectionStrings__Default: "Server=sqlserver,1433;Database=Lumiere;User Id=sa;Password=Lumiere@Str0ng!;TrustServerCertificate=True"
-    depends_on:
-      sqlserver:
-        condition: service_healthy
 
+    container_name: lumiere.api
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Docker
+    ports:
+      - 5000:8080
+    depends_on:
+      - lumiere.database
+
+  lumiere.database:
+
+    image: mcr.microsoft.com/mssql/server:2025-latest
+    container_name: lumiere.database
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=Password@123
+      - MSSQL_PID=Evaluation
+    ports:
+      - 1433:1433
+    volumes:
+      - sql_data:/var/opt/mssql
+  
 volumes:
-  sqlserver_data:
+  sql_data:
+    

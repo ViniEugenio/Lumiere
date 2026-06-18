@@ -6,10 +6,9 @@ public sealed class ResultDto<T>
 
     public IReadOnlyCollection<string> Errors => _errors.AsReadOnly();
     public T? Data { get; private set; }
-    public bool IsSuccess => _errors.Count == 0;
-    public bool IsFailure => _errors.Count > 0;
-
+    public bool Succeeded => _errors.Count == 0;
     public void SetData(T data) => Data = data;
     public void AddError(string error) => _errors.Add(error);
     public void AddErrors(IEnumerable<string> errors) => _errors.AddRange(errors);
+    public void AddError(Exception exception) => _errors.Add(exception.Message);
 }

@@ -4,6 +4,7 @@ public static class SwaggerExtensions
 {
     public static IServiceCollection AddSwaggerDocs(this IServiceCollection services)
     {
+        services.AddEndpointsApiExplorer();
         services.AddSwaggerGen();
 
         return services;
@@ -17,7 +18,7 @@ public static class SwaggerExtensions
         }
 
         app.UseSwagger();
-        app.UseSwaggerUI();
+        app.UseSwaggerUI();        
 
         return app;
     }

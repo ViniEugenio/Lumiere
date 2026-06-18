@@ -6,7 +6,10 @@ public static class EndpointRegistrationExtension
 {
     public static void AddEndpoints(this WebApplication app)
     {
+
         var apiRoutes = app.MapGroup("api/");
         UserEndpoints.MapUserEndpoints(apiRoutes);
+        DataBaseEndpoints.MapDataBaseEndpoints(apiRoutes);
+
     }
 }

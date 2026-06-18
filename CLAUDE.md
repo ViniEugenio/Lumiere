@@ -175,11 +175,13 @@ group.MapPost("", CreateUser)
 Responsável pelas regras centrais do domínio.
 
 **Regras:**
-- **Não depende de nenhuma outra camada**
+- **Não depende de nenhuma outra camada nem de frameworks/bibliotecas externas** — isso inclui ASP.NET Core, EF Core, MediatR, etc. Domain deve ser compilável referenciando apenas o BCL do .NET
 - Contém apenas conceitos de domínio
 - Todas as entidades ficam nesta camada
 - Todas as interfaces dos repositórios ficam nesta camada
 - Value Objects, Enums e Exceptions de domínio ficam nesta camada
+- Tipos compartilhados de infraestrutura interna do domínio (ex: `Result<T>`, `PagedResult<T>`) ficam em `Domain/Common` — devem ser POCOs puros, sem dependência externa
+- Sem exceções: nenhuma entidade do Domain deve herdar de classes de framework (ex: ASP.NET Core Identity). O projeto não usa ASP.NET Core Identity — autenticação/gerenciamento de usuário é responsabilidade própria, implementada via Infra (hashing de senha, etc.), nunca vazando pro Domain
 
 **Estrutura:**
 ```
@@ -208,7 +210,8 @@ Responsável pelos casos de uso da aplicação.
 - Commands e Queries devem retornar `ResultDto<T>` quando precisam comunicar status de sucesso ou falha
 - DTOs usados para comunicação entre Application e API ficam em `Lumiere.Application/DTOs` — Features não devem criar subpastas `DTOs/` próprias sem justificativa forte
 - **Services devem receber Commands, Queries ou DTOs como parâmetro** — nunca uma lista de primitivos; ver regra de parâmetros abaixo
-- **Depende apenas do Domain**
+- **Depende apenas do Domain** — o `.csproj` da Application não deve referenciar ASP.NET Core (nem via `FrameworkReference`/`PackageReference`) ou qualquer outro framework de apresentação/infraestrutura. As únicas dependências externas aceitas são bibliotecas de aplicação do próprio padrão CQRS (MediatR, FluentValidation)
+- A regra de "Services mediam acesso a repositório" vale para **toda** Feature, sem exceção — inclusive Handlers que não fazem orquestração de negócio (ex: comandos administrativos/infra como migrations)
 
 **Estrutura:**
 ```
@@ -574,7 +577,9 @@ Nenhuma camada deve violar as dependências estabelecidas pela Clean Architectur
 - Mapeamentos via `IEntityTypeConfiguration<T>` na camada Infra
 
 ### User
-- Herda de `IdentityUser<int>` (ASP.NET Core Identity com PK int)
+- Entidade própria do Domain, sem herdar de nenhuma classe de framework — segue as convenções globais de entidades acima (Id `int`, `CreatedAt`, `UpdatedAt`, `Active`)
+- Campos de autenticação (ex: hash de senha) são responsabilidade da Infra, expostos ao Domain apenas como tipos primitivos
+- **Nota histórica:** o projeto usava ASP.NET Core Identity (`User : IdentityUser<int>`) anteriormente; essa dependência está sendo removida do Domain. Esta seção reflete o modelo-alvo — enquanto o refactor não for concluído, o código pode temporariamente ainda divergir
 
 ---
 

@@ -2,6 +2,7 @@ using Lumiere.Application.DTOs;
 using Lumiere.Application.Features.Users.Commands;
 using Lumiere.Application.Resources;
 using Lumiere.Application.Services.Interfaces;
+using Lumiere.Domain.Common;
 using Lumiere.Domain.Entities;
 using Lumiere.Domain.Interfaces;
 
@@ -15,7 +16,7 @@ public class UserService(IUserRepository userRepository) : IUserService
     {
         var validationResult = await ValidateCreateUserAsync(command, cancellationToken);
 
-        if (validationResult.IsFailure)
+        if (!validationResult.Succeeded)
         {
             return validationResult;
         }
@@ -23,11 +24,11 @@ public class UserService(IUserRepository userRepository) : IUserService
         var result = new ResultDto<object>();
         var user = User.Create(command.Username, command.Email);
 
-        var identityResult = await userRepository.CreateUserAsync(user, command.Password, cancellationToken);
+        Result<List<string>> createUserResult = await userRepository.CreateUserAsync(user, command.Password, cancellationToken);
 
-        if (!identityResult.Succeeded)
+        if (!createUserResult.Succeeded)
         {
-            result.AddErrors(identityResult.Errors.Select(identityError => identityError.Description));
+            result.AddErrors(createUserResult.Errors);
             return result;
         }
 

@@ -1,0 +1,223 @@
+================================================================================
+LUMIERE — REVISÃO DE ARQUITETURA (Clean Architecture)
+Data: 08/06/2026
+================================================================================
+
+
+CONTEXTO
+--------
+Análise das violações de Clean Architecture no projeto Lumiere, com foco
+na dependência do ASP.NET Identity cruzando fronteiras de camada.
+
+
+================================================================================
+O QUE ESTÁ BEM FEITO
+================================================================================
+
+- API → Application (sem tocar Domain/Infra diretamente)         OK
+- CQRS com MediatR (Command → Handler → Service)                  OK
+- Handler delega para Service (não acessa repositório diretamente) OK
+- DTOs na fronteira API <-> Application                           OK
+- FluentValidation só para validação de request                   OK
+- Mapeamentos EF Core isolados em Infra                           OK
+- DI por extensão de camada (AddApplication, AddInfrastructure)   OK
+- Testcontainers em vez de mocks de banco                         OK
+- UserService usando User.Create() — Application PODE usar        OK
+  entidades de Domain, isso é o comportamento correto
+
+
+================================================================================
+VIOLAÇÕES ENCONTRADAS
+================================================================================
+
+VIOLAÇÃO #1 — CRÍTICA
+Domain depende de Infrastructure (ASP.NET Identity)
+
+  Arquivo: src/Lumiere.Domain/Entities/User.cs
+
+  using Microsoft.AspNetCore.Identity;        <- framework de infraestrutura
+  public class User : IdentityUser<int>       <- herda de classe do Identity
+
+  Impacto: Domain acoplado ao ASP.NET Identity. Dificulta troca de
+  biblioteca de autenticação no futuro.
+
+  Obs: esse padrão é extremamente comum em projetos .NET (é o próprio
+  template da Microsoft). Muitas equipes aceitam como compromisso pragmático.
+
+
+VIOLAÇÃO #2 — CRÍTICA
+Interface de Domain expõe tipo de Infrastructure
+
+  Arquivo: src/Lumiere.Domain/Interfaces/IUserRepository.cs
+
+  using Microsoft.AspNetCore.Identity;        <- infraestrutura no Domain
+  Task<IdentityResult> CreateUserAsync(...)   <- tipo do Identity na interface
+
+  Impacto: contratos de Domain carregam tipos de infraestrutura.
+  Application passa a conhecer IdentityResult transitivamente via Domain.
+
+
+VIOLAÇÃO #3 — CONSEQUÊNCIA DAS ANTERIORES
+Application Service processa tipos de Infrastructure
+
+  Arquivo: src/Lumiere.Application/Services/Implementations/UserService.cs
+
+  var identityResult = await _userRepository.CreateUserAsync(...)
+  if (!identityResult.Succeeded) { ... }
+  identityResult.Errors.Select(identityError => identityError.Description)
+
+  Impacto: Application conhece IdentityResult, IdentityError — tipos que
+  pertencem exclusivamente à camada de infraestrutura.
+
+
+================================================================================
+POR QUE ISSO É UM PROBLEMA?
+================================================================================
+
+IdentityResult NÃO é equivalente a um DTO.
+
+A diferença fundamental não é a forma (ambos têm flag de sucesso + erros),
+mas sim a propriedade e o acoplamento:
+
+  ResultDto<T>
+    - definido por VOCÊ, na sua Application
+    - você controla a forma, os campos, o comportamento
+    - não carrega dependência de pacote externo
+    - pode evoluir livremente
+
+  IdentityResult
+    - definido pela Microsoft (Microsoft.AspNetCore.Identity)
+    - você não controla nada nele
+    - carrega toda a semântica do ASP.NET Identity
+    - evolui na cadência da Microsoft, não na sua
+    - revela um detalhe de implementação de infraestrutura
+
+TESTE PRÁTICO — e se você trocar o Identity?
+
+  Com Application isolada do Identity:
+    Muda só Infra/UserRepository.cs          <- swap cirúrgico
+    Domain, Application, API: intocados      <- zero impacto
+
+  Com IdentityResult no Application:
+    Muda Infra/UserRepository.cs
+    Muda Domain/IUserRepository.cs           <- interface de domínio
+    Muda Application/UserService.cs          <- regras de negócio
+    Possivelmente Application.csproj         <- nova dependência de pacote
+
+
+================================================================================
+ABORDAGENS PARA CORREÇÃO
+================================================================================
+
+SOBRE O USER ENTITY (Violação #1)
+Três caminhos:
+
+  Opção A — Pragmática (atual, aceita o acoplamento):
+    User.cs herda IdentityUser<int>
+    Pros: simples, menos código
+    Contras: Domain acoplado a Identity, difícil trocar
+
+  Opção B — Separação total:
+    User.cs puro no Domain (sem Identity)
+    AppUser.cs : IdentityUser<int> em Infra (apenas pro Identity)
+    Mapeamento entre os dois em Infra
+    Pros: Domain 100% limpo
+    Contras: complexidade maior, sincronização entre entidades
+
+  Opção C — Compromisso controlado (recomendado como primeiro passo):
+    User.cs mantém herança de IdentityUser<int> (aceita o acoplamento)
+    MAS IUserRepository retorna tipo de Domain (não IdentityResult)
+    MAS UserService não toca IdentityResult
+    Pros: reduz o vazamento sem reescrever tudo
+    Contras: Domain ainda acoplado, mas o vazamento não propaga
+
+
+SOBRE O IDENTITYRESULT (Violações #2 e #3)
+Duas opções para isolar o Identity dentro do Infra:
+
+  Opção A — Retornar IEnumerable<string> (tipo puro):
+
+    // Domain/Interfaces/IUserRepository.cs
+    Task<IEnumerable<string>> CreateUserAsync(User user, string password, CancellationToken ct);
+
+    // Infra/Repositories/UserRepository.cs (tradução acontece aqui)
+    var result = await _userManager.CreateAsync(user, password);
+    if (!result.Succeeded)
+        return result.Errors.Select(identityError => identityError.Description);
+    return Enumerable.Empty<string>();
+
+    // Application/UserService.cs (não vê mais nada do Identity)
+    var errors = await _userRepository.CreateUserAsync(user, command.Password, ct);
+    if (errors.Any()) { ... }
+
+    Pros: Application controla o que fazer com os erros
+    Contras: semântica estranha — lista vazia = sucesso (não óbvio)
+
+
+  Opção B — Lançar exceção de domínio:
+
+    // Domain/Exceptions/UserCreationException.cs
+    public class UserCreationException(IEnumerable<string> errors) : DomainException
+    {
+        public IEnumerable<string> Errors { get; } = errors;
+    }
+
+    // Infra/Repositories/UserRepository.cs
+    var result = await _userManager.CreateAsync(user, password);
+    if (!result.Succeeded)
+        throw new UserCreationException(
+            result.Errors.Select(identityError => identityError.Description));
+
+    // Application/UserService.cs
+    try { await _userRepository.CreateUserAsync(user, command.Password, ct); }
+    catch (UserCreationException ex) { resultDto.AddErrors(ex.Errors); }
+
+    Pros: semântica clara — exceção = algo errado aconteceu
+    Contras: fluxo de controle por exceção para casos que podem não ser
+             tão excepcionais (UserService já valida duplicatas antes)
+
+
+================================================================================
+DEPENDÊNCIAS ATUAIS vs. IDEAIS
+================================================================================
+
+ATUAL:
+  Lumiere.Domain
+    └── Microsoft.AspNetCore.Identity   <- problema
+
+  Lumiere.Application
+    ├── Lumiere.Domain
+    │       └── Microsoft.AspNetCore.Identity  <- transitivo, Application
+    │                                             acaba consumindo
+    ├── FluentValidation
+    └── MediatR
+
+IDEAL:
+  Lumiere.Domain
+    └── (zero dependências externas)    <- Domain completamente puro
+
+  Lumiere.Application
+    ├── Lumiere.Domain (puro)
+    ├── FluentValidation
+    └── MediatR
+
+  Lumiere.Infra
+    ├── Lumiere.Domain
+    ├── Microsoft.AspNetCore.Identity   <- fica aqui, não vaza
+    └── Microsoft.EntityFrameworkCore
+
+
+================================================================================
+RESUMO DAS PRIORIDADES
+================================================================================
+
+  Prioridade 1 (maior impacto, não requer reescrever User):
+    Corrigir IUserRepository para não retornar IdentityResult
+    Corrigir UserService para não processar tipos do Identity
+    Identity fica encapsulado dentro de Infra/UserRepository.cs
+
+  Prioridade 2 (maior esforço, maior pureza):
+    Separar User domain entity de IdentityUser (Opção B acima)
+    Criar mapeamento em Infra entre as duas entidades
+
+================================================================================
