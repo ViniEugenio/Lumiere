@@ -204,14 +204,14 @@ Responsável pelos casos de uso da aplicação.
 - Commands e Queries separados
 - Utilizar **MediatR** para processamento dos requests
 - Toda regra de aplicação fica nesta camada
-- **CommandHandlers não devem acessar repositórios diretamente** — o acesso a repositórios deve ocorrer exclusivamente pelos Application Services
-- **Services são responsáveis pela orquestração** das regras de negócio e conversão de resultados
+- **CommandHandlers podem acessar repositórios diretamente quando são o único consumidor daquela orquestração** — o Handler já desempenha o papel de Use Case/Interactor (CQRS + Clean Architecture); um Service só se justifica quando uma mesma lógica de orquestração é reusada por **mais de um** Handler
+- **Services existem apenas para eliminar duplicação real entre Handlers** — extrair um Service no momento em que um segundo Handler precisar da mesma orquestração, não preventivamente. Quando existir, o Service é responsável pela orquestração das regras de negócio e conversão de resultados compartilhada entre os Handlers que o consomem
 - **Repositórios são responsáveis apenas pela persistência** — não convertem erros em DTOs
 - Commands e Queries devem retornar `ResultDto<T>` quando precisam comunicar status de sucesso ou falha
 - DTOs usados para comunicação entre Application e API ficam em `Lumiere.Application/DTOs` — Features não devem criar subpastas `DTOs/` próprias sem justificativa forte
 - **Services devem receber Commands, Queries ou DTOs como parâmetro** — nunca uma lista de primitivos; ver regra de parâmetros abaixo
 - **Depende apenas do Domain** — o `.csproj` da Application não deve referenciar ASP.NET Core (nem via `FrameworkReference`/`PackageReference`) ou qualquer outro framework de apresentação/infraestrutura. As únicas dependências externas aceitas são bibliotecas de aplicação do próprio padrão CQRS (MediatR, FluentValidation)
-- A regra de "Services mediam acesso a repositório" vale para **toda** Feature, sem exceção — inclusive Handlers que não fazem orquestração de negócio (ex: comandos administrativos/infra como migrations)
+- Regra de uma única Entity (ex: invariantes de senha) pertence à própria Entity, nunca ao Handler ou ao Service
 
 **Estrutura:**
 ```
@@ -408,27 +408,26 @@ Task<ResultDto<object>> CreateUserAsync(
 
 ---
 
-## Organização de Arquivos de Service
+## Organização de Arquivos de Handler e Service
 
-Dentro dos Application Services, a ordem dos membros deve seguir:
+Dentro de CommandHandlers/QueryHandlers e de Application Services, a ordem dos membros deve seguir:
 
 1. **Construtor** (via primary constructor na declaração da classe)
-2. **Métodos públicos** (implementações de interface) — aparecem primeiro no corpo da classe
+2. **Métodos públicos** (`Handle`, ou implementações de interface no caso de um Service) — aparecem primeiro no corpo da classe
 3. **Métodos privados auxiliares** — aparecem ao final da classe
 
-Validações internas do service devem ser implementadas como métodos privados.
+Validações internas devem ser implementadas como métodos privados.
 
 ```
-UserService
-├── Primary Constructor
-├── Métodos Públicos (implementações de IUserService)
+CreateUserCommandHandler
+├── Primary Constructor (IUserRepository)
+├── Handle (público)
 └── Métodos Privados
     ├── ValidateCreateUserAsync
-    ├── MapUser
     └── Outros auxiliares
 ```
 
-Esta convenção se aplica a todos os services futuros.
+Esta convenção se aplica a todos os Handlers e Services futuros.
 
 ---
 
@@ -472,7 +471,7 @@ Resources
 - Formato (e-mail, regex)
 - Senhas e confirmações
 
-**Validações que dependem de banco de dados** devem ser implementadas dentro dos Application Services como métodos privados:
+**Validações que dependem de banco de dados** devem ser implementadas como métodos privados dentro do Handler (ou do Service, quando este existir por reuso entre Handlers):
 - Unicidade de username ou e-mail
 - Validações referenciais
 - Validações entre entidades

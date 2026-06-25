@@ -1,6 +1,4 @@
-﻿using Lumiere.Application.Services.Implementations;
-using Lumiere.Application.Services.Interfaces;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 
 namespace Lumiere.Application.DependencyInjection
 {
@@ -9,8 +7,6 @@ namespace Lumiere.Application.DependencyInjection
 
         public static void AddServices(this IServiceCollection services)
         {
-            services.AddScoped<IUserService, UserService>();
-            services.AddScoped<IDataBaseService, DataBaseService>();
         }
 
     }
