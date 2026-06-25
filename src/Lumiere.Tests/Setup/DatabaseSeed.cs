@@ -1,7 +1,6 @@
 using Bogus;
 using Lumiere.Domain.Entities;
 using Lumiere.Infra.Context;
-using Microsoft.AspNetCore.Identity;
 
 namespace Lumiere.Tests.Setup;
 
@@ -21,15 +20,19 @@ public static class DatabaseSeed
     private static List<User> GenerateUsers(int count)
     {
         return new Faker<User>("pt_BR")
-            .RuleFor(user => user.UserName, faker => faker.Internet.UserName())
-            .RuleFor(user => user.Email, faker => faker.Internet.Email())
-            .RuleFor(user => user.NormalizedEmail, (_, user) => user.Email!.ToUpperInvariant())
-            .RuleFor(user => user.NormalizedUserName, (_, user) => user.UserName!.ToUpperInvariant())
-            .RuleFor(user => user.PasswordHash, _ => new PasswordHasher<User>().HashPassword(null!, "Test@1234"))
-            .RuleFor(user => user.SecurityStamp, _ => Guid.NewGuid().ToString())
-            .RuleFor(user => user.CreatedAt, faker => faker.Date.Past(1))
-            .RuleFor(user => user.Active, _ => true)
-            .Generate(count);
+            .CustomInstantiator(faker =>
+                User.Create(
+                    faker.Name.FirstName(),
+                    faker.Name.LastName(),
+                    faker.Internet.Email()
+                ))
+            .Generate(count)
+            .Select(user =>
+            {
+                user.SetPassword("seeded-password-hash");
+                return user;
+            })
+            .ToList();
     }
 
     private static List<Channel> GenerateChannels(List<User> users)

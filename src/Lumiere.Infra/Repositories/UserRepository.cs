@@ -1,36 +1,29 @@
-using Lumiere.Domain.Common;
 using Lumiere.Domain.Entities;
 using Lumiere.Domain.Interfaces;
 using Lumiere.Infra.Context;
-using Microsoft.AspNetCore.Identity;
+using System.Security.Cryptography;
 
 namespace Lumiere.Infra.Repositories;
 
-public class UserRepository(AppDbContext context, UserManager<User> userManager)
+public class UserRepository(AppDbContext context)
     : BaseRepository<User>(context), IUserRepository
 {
-    public async Task<Result<List<string>>> CreateUserAsync(User user, string password, CancellationToken cancellationToken = default)
+    private const int SaltSize = 16;
+    private const int HashSize = 32;
+    private const int Iterations = 100_000;
+
+    public async Task CreateUserAsync(User user, string password, CancellationToken cancellationToken = default)
     {
+        user.SetPassword(HashPassword(password));
 
-        Result<List<string>> createUserResult = new();
-        IdentityResult identityResult = await userManager.CreateAsync(user, password);
+        await AddAsync(user, cancellationToken);
+    }
 
-        if (identityResult.Succeeded)
-        {
-            return createUserResult;
-        }
+    private static string HashPassword(string password)
+    {
+        byte[] salt = RandomNumberGenerator.GetBytes(SaltSize);
+        byte[] hash = Rfc2898DeriveBytes.Pbkdf2(password, salt, Iterations, HashAlgorithmName.SHA256, HashSize);
 
-        List<string> errors = [..
-
-            identityResult
-                .Errors
-                .Select(error => error.Description)
-
-        ];
-
-        createUserResult.SetData(errors);
-
-        return createUserResult;
-
+        return $"{Convert.ToBase64String(salt)}.{Convert.ToBase64String(hash)}";
     }
 }

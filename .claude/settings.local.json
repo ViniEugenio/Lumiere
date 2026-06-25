@@ -9,7 +9,8 @@
       "Bash(dotnet restore *)",
       "Bash(dotnet build *)",
       "Bash(dotnet remove *)",
-      "Bash(dotnet add *)"
+      "Bash(dotnet add *)",
+      "Bash(npx openspec *)"
     ]
   }
 }

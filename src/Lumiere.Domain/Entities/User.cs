@@ -1,33 +1,39 @@
-using Microsoft.AspNetCore.Identity;
+using Lumiere.Domain.Common;
 
 namespace Lumiere.Domain.Entities;
 
-public class User : IdentityUser<int>
+public class User : BaseEntity
 {
-    public DateTime CreatedAt { get; private set; }
-    public DateTime? UpdatedAt { get; private set; }
-    public bool Active { get; private set; }
+    public int Id { get; private set; }
+    public string FirstName { get; private set; } = string.Empty;
+    public string LastName { get; private set; } = string.Empty;
+    public string Email { get; private set; } = string.Empty;
+    public string PasswordHash { get; private set; } = string.Empty;
 
     public ICollection<Channel> Channels { get; private set; } = [];
 
-    public static User Create(string userName, string email)
+    public static User Create(string firstName, string lastName, string email)
     {
         return new User
         {
-            UserName = userName,
+            FirstName = firstName,
+            LastName = lastName,
             Email = email,
             CreatedAt = DateTime.UtcNow,
             Active = true
         };
     }
 
-    public void Update(string userName, string email)
+    public void Update(string firstName, string lastName, string email)
     {
-        UserName = userName;
+        FirstName = firstName;
+        LastName = lastName;
         Email = email;
         UpdatedAt = DateTime.UtcNow;
     }
 
-    public void Deactivate() => Active = false;
-    public void Activate() => Active = true;
+    public void SetPassword(string passwordHash)
+    {
+        PasswordHash = passwordHash;
+    }
 }

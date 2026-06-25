@@ -10,7 +10,6 @@ public static class InfrastructureExtensions
         IConfiguration configuration)
     {
         services.AddContext(configuration);
-        services.AddIdentity();
         services.AddRepositories();
     }
 }

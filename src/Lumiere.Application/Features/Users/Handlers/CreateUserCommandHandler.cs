@@ -1,7 +1,6 @@
 using Lumiere.Application.DTOs;
 using Lumiere.Application.Features.Users.Commands;
 using Lumiere.Application.Resources;
-using Lumiere.Domain.Common;
 using Lumiere.Domain.Entities;
 using Lumiere.Domain.Interfaces;
 using MediatR;
@@ -20,18 +19,11 @@ public class CreateUserCommandHandler(IUserRepository userRepository)
             return validationResult;
         }
 
-        var result = new ResultDto<object>();
-        var user = User.Create(request.Username, request.Email);
+        var user = User.Create(request.FirstName, request.LastName, request.Email);
 
-        Result<List<string>> createUserResult = await userRepository.CreateUserAsync(user, request.Password, cancellationToken);
+        await userRepository.CreateUserAsync(user, request.Password, cancellationToken);
 
-        if (!createUserResult.Succeeded)
-        {
-            result.AddErrors(createUserResult.Errors);
-            return result;
-        }
-
-        return result;
+        return new ResultDto<object>();
     }
 
     private async Task<ResultDto<object>> ValidateCreateUserAsync(
@@ -39,13 +31,6 @@ public class CreateUserCommandHandler(IUserRepository userRepository)
         CancellationToken cancellationToken)
     {
         var result = new ResultDto<object>();
-
-        var usernameExists = await userRepository.ExistsAsync(user => user.UserName == command.Username);
-
-        if (usernameExists)
-        {
-            result.AddError(Errors.UsernameAlreadyInUse);
-        }
 
         var emailExists = await userRepository.ExistsAsync(user => user.Email == command.Email);
 

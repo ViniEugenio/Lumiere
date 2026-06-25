@@ -575,10 +575,18 @@ Nenhuma camada deve violar as dependências estabelecidas pela Clean Architectur
 - Todas as entidades possuem as colunas: `CreatedAt` (DateTime), `UpdatedAt` (DateTime?), `Active` (bool/bit)
 - Mapeamentos via `IEntityTypeConfiguration<T>` na camada Infra
 
+### BaseEntity
+- `Lumiere.Domain/Common/BaseEntity.cs` é uma classe abstrata que concentra `CreatedAt`, `UpdatedAt`, `Active` e os métodos `Activate()`/`Deactivate()`
+- **Toda nova entidade deve herdar de `BaseEntity`**, salvo justificativa explícita documentada no código (comentário explicando por que a entidade não se encaixa no ciclo de vida padrão)
+- Ao criar uma nova entidade, confirme se ela deve herdar `BaseEntity` antes de redeclarar `CreatedAt`/`UpdatedAt`/`Active` manualmente
+- `Id` continua declarado individualmente em cada entidade — não faz parte de `BaseEntity`
+- Entidades atuais que seguem essa convenção: `User`, `Channel`
+
 ### User
-- Entidade própria do Domain, sem herdar de nenhuma classe de framework — segue as convenções globais de entidades acima (Id `int`, `CreatedAt`, `UpdatedAt`, `Active`)
-- Campos de autenticação (ex: hash de senha) são responsabilidade da Infra, expostos ao Domain apenas como tipos primitivos
-- **Nota histórica:** o projeto usava ASP.NET Core Identity (`User : IdentityUser<int>`) anteriormente; essa dependência está sendo removida do Domain. Esta seção reflete o modelo-alvo — enquanto o refactor não for concluído, o código pode temporariamente ainda divergir
+- Entidade própria do Domain, sem herdar de nenhuma classe de framework — herda `BaseEntity` e não depende de nenhum pacote do ASP.NET Core Identity
+- Campos: `Id`, `FirstName`, `LastName`, `Email`, `PasswordHash`, mais os herdados de `BaseEntity`
+- `PasswordHash` é um primitivo (`string`) calculado e atribuído inteiramente pela Infra (hashing próprio, sem depender de nenhum pacote `Microsoft.AspNetCore.Identity*`) — o Domain só armazena o valor, nunca conhece o algoritmo
+- Não existe pacote de Identity referenciado em nenhuma camada da solução (Domain, Application, Infra ou API)
 
 ---
 

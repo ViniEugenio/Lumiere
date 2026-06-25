@@ -7,13 +7,19 @@ public class CreateUserCommandValidator : AbstractValidator<CreateUserCommand>
 {
     public CreateUserCommandValidator()
     {
+        RuleFor(command => command.FirstName)
+            .NotEmpty();
+
+        RuleFor(command => command.LastName)
+            .NotEmpty();
+
         RuleFor(command => command.Email)
             .NotEmpty()
             .EmailAddress();
 
-        RuleFor(command => command.Username)
+        RuleFor(command => command.ConfirmEmail)
             .NotEmpty()
-            .MinimumLength(6);
+            .Equal(command => command.Email).WithMessage("ConfirmEmail must match Email.");
 
         RuleFor(command => command.Password)
             .NotEmpty()
