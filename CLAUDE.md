@@ -265,6 +265,7 @@ Responsável pelos testes unitários e de integração.
 - Para cada nova funcionalidade, criar testes que cubram todos os casos de uso
 - Na pasta `Setup`, utilizar **Testcontainers** para criação do banco de dados de teste
 - O arquivo de seed em `Setup` deve popular com dados fake todas as entidades do Domain
+- **O Claude nunca deve fazer requisições diretas às rotas da API (curl, HTTP client, Swagger, etc.) para validar uma implementação** — isso grava dados reais no banco de desenvolvimento e atrapalha outros testes/cenários em andamento. Validação de comportamento deve ser feita exclusivamente via testes automatizados em `Lumiere.Tests` (unitários e de integração)
 
 **Estrutura:**
 ```

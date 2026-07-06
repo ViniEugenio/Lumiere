@@ -5,7 +5,7 @@ using Lumiere.Domain.Entities;
 using Lumiere.Domain.Interfaces;
 using MediatR;
 
-namespace Lumiere.Application.Features.Users.Handlers;
+namespace Lumiere.Application.Features.Users.Handlers.CommandsHandlers;
 
 public class CreateUserCommandHandler(IUserRepository userRepository)
     : IRequestHandler<CreateUserCommand, ResultDto<object>>

@@ -7,11 +7,12 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddSwaggerDocs();
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddControllers();
 
 var app = builder.Build();
 
 app.UseSwaggerDocs();
 app.UseHttpsRedirection();
-app.AddEndpoints();
+app.MapControllers();
 
 app.Run();

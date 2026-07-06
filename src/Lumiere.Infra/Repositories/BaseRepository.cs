@@ -1,3 +1,4 @@
+using Lumiere.Domain.Common;
 using Lumiere.Domain.Interfaces;
 using Lumiere.Infra.Context;
 using Microsoft.EntityFrameworkCore;
@@ -59,5 +60,35 @@ public abstract class BaseRepository<TEntity>(AppDbContext context) : IBaseRepos
     {
         _dbSet.Update(entity);
         await _context.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<BasePaginationResult<TResult>> GetAllPaginationAsync<TResult>(
+        int page,
+        int pageAmount,
+        Expression<Func<TEntity, bool>> filterExpression,
+        Expression<Func<TEntity, object>> orderByExpression,
+        Expression<Func<TEntity, TResult>> selectorExpression)
+    {
+
+        IQueryable<TEntity> query = _dbSet
+            .AsNoTracking()
+            .Where(filterExpression);
+
+        int totalItems = await query
+            .CountAsync();
+
+        int totalPages = (int)Math.Ceiling((decimal)totalItems / pageAmount);
+
+        int skip = (page - 1) * pageAmount;
+
+        List<TResult> items = await query
+            .OrderBy(orderByExpression)
+            .Select(selectorExpression)
+            .Skip(skip)
+            .Take(pageAmount)
+            .ToListAsync();
+
+        return new BasePaginationResult<TResult>(page, pageAmount, totalPages, items);
+
     }
 }

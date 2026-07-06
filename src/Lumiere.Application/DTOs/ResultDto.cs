@@ -1,6 +1,6 @@
 namespace Lumiere.Application.DTOs;
 
-public sealed class ResultDto<T>
+public class ResultDto<T>
 {
     private readonly List<string> _errors = [];
 

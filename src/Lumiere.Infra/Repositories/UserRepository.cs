@@ -1,6 +1,9 @@
+using Lumiere.Domain.Common;
 using Lumiere.Domain.Entities;
 using Lumiere.Domain.Interfaces;
+using Lumiere.Domain.ValueObjects;
 using Lumiere.Infra.Context;
+using System.Linq.Expressions;
 using System.Security.Cryptography;
 
 namespace Lumiere.Infra.Repositories;
@@ -8,9 +11,6 @@ namespace Lumiere.Infra.Repositories;
 public class UserRepository(AppDbContext context)
     : BaseRepository<User>(context), IUserRepository
 {
-    private const int SaltSize = 16;
-    private const int HashSize = 32;
-    private const int Iterations = 100_000;
 
     public async Task CreateUserAsync(User user, string password, CancellationToken cancellationToken = default)
     {
@@ -21,9 +21,25 @@ public class UserRepository(AppDbContext context)
 
     private static string HashPassword(string password)
     {
-        byte[] salt = RandomNumberGenerator.GetBytes(SaltSize);
-        byte[] hash = Rfc2898DeriveBytes.Pbkdf2(password, salt, Iterations, HashAlgorithmName.SHA256, HashSize);
+
+        int saltSize = 16;
+        int hashSize = 32;
+        int iterations = 100_000;
+
+        byte[] salt = RandomNumberGenerator.GetBytes(saltSize);
+        byte[] hash = Rfc2898DeriveBytes.Pbkdf2(password, salt, iterations, HashAlgorithmName.SHA256, hashSize);
 
         return $"{Convert.ToBase64String(salt)}.{Convert.ToBase64String(hash)}";
+
+    }
+
+    public async Task<BasePaginationResult<UserPaginated>> GetUsers(
+        int page,
+        int pageAmount,
+        Expression<Func<User, bool>> filterExpression,
+        Expression<Func<User, object>> orderByExpression,
+        Expression<Func<User, UserPaginated>> selectorExpression)
+    {
+        return await GetAllPaginationAsync(page, pageAmount, filterExpression, orderByExpression, selectorExpression);
     }
 }
