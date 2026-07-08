@@ -10,7 +10,13 @@
       "Bash(dotnet build *)",
       "Bash(dotnet remove *)",
       "Bash(dotnet add *)",
-      "Bash(npx openspec *)"
+      "Bash(npx openspec *)",
+      "Bash(grep -rlE \"^namespace [A-Za-z.]+;$\" src --include=\"*.cs\")",
+      "Bash(grep -rlE \"^namespace [A-Za-z.]+$\" src --include=\"*.cs\")",
+      "Bash(xxd)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)"
     ]
   }
 }
