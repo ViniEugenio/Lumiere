@@ -4,7 +4,7 @@ using Lumiere.Application.Resources;
 
 namespace Lumiere.Application.Validators;
 
-public class BasePaginationValidator : AbstractValidator<BasePaginatedQuery>
+public class BasePaginationValidator<TResult> : AbstractValidator<BasePaginatedQuery<TResult>>
 {
     public BasePaginationValidator()
     {
