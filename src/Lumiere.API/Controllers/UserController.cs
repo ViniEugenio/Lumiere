@@ -11,7 +11,7 @@ namespace Lumiere.API.Controllers;
 public class UserController(ISender sender) : BaseController(sender)
 {
     [HttpGet]
-    public async Task<IActionResult> GetUsersQuery([FromQuery] GetUsersQuery query)
+    public async Task<IActionResult> GetUsers([FromQuery] GetUsersQuery query)
     {
         ResultDto<BasePaginationResult<UserPaginated>> result = await _sender.Send(query);
         return Respond(result);
