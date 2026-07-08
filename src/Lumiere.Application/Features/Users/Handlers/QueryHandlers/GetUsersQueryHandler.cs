@@ -3,35 +3,39 @@ using Lumiere.Application.Features.Users.Queries;
 using Lumiere.Domain.Common;
 using Lumiere.Domain.Entities;
 using Lumiere.Domain.Interfaces;
-using Lumiere.Domain.ValueObjects;
 using MediatR;
 using System.Linq.Expressions;
 
-namespace Lumiere.Application.Features.Users.Handlers.QueryHandlers
+namespace Lumiere.Application.Features.Users.Handlers.QueryHandlers;
+
+public class GetUsersQueryHandler(IUserRepository userRepository) : IRequestHandler<GetUsersQuery, ResultDto<BasePaginationResult<UserPaginated>>>
 {
-    public class GetUsersQueryHandler(IUserRepository userRepository) : IRequestHandler<GetUsersQuery, ResultDto<BasePaginationResult<UserPaginated>>>
+    public async Task<ResultDto<BasePaginationResult<UserPaginated>>> Handle(GetUsersQuery request, CancellationToken cancellationToken)
     {
+        Expression<Func<User, bool>> filterExpression = user =>
+            string.IsNullOrEmpty(request.Name) || user.FirstName.Contains(request.Name);
 
-        public async Task<ResultDto<BasePaginationResult<UserPaginated>>> Handle(GetUsersQuery request, CancellationToken cancellationToken)
-        {
+        Expression<Func<User, object>> orderByExpression = user => user.FirstName;
 
-            Expression<Func<User, bool>> filterExpression = user =>
+        Expression<Func<User, UserPaginated>> selectorExpression = user => new UserPaginated(
+            user.FirstName,
+            user.LastName,
+            user.Email,
+            user.Active);
 
-                string.IsNullOrEmpty(request.Name) || user.FirstName.Contains(request.Name);
+        PaginationFilters<User, UserPaginated> paginationFilter = new(
+            request.Page!.Value,
+            request.PageAmount!.Value,
+            filterExpression,
+            orderByExpression,
+            selectorExpression);
 
-            Expression<Func<User, object>> orderByExpression = user => user.FirstName;
+        BasePaginationResult<UserPaginated> usersPaginatedResult = await userRepository
+            .GetAllPaginationAsync(paginationFilter, cancellationToken);
 
-            Expression<Func<User, UserPaginated>> selectorExpression = user => new UserPaginated(user.FirstName, user.LastName, user.Email, user.Active);
+        ResultDto<BasePaginationResult<UserPaginated>> result = new();
+        result.SetData(usersPaginatedResult);
 
-            BasePaginationResult<UserPaginated> usersPaginatedResult = await userRepository
-                .GetAllPaginationAsync(request.Page!.Value, request.PageAmount!.Value, filterExpression, orderByExpression, selectorExpression);
-
-            ResultDto<BasePaginationResult<UserPaginated>> handlerResult = new();
-            handlerResult.SetData(usersPaginatedResult);
-
-            return handlerResult;
-
-        }
-
+        return result;
     }
 }

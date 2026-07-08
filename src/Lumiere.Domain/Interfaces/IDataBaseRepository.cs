@@ -1,8 +1,7 @@
-﻿namespace Lumiere.Domain.Interfaces
+namespace Lumiere.Domain.Interfaces;
+
+public interface IDataBaseRepository
 {
-    public interface IDataBaseRepository
-    {
-        Task ApplyMigrations(CancellationToken cancellationToken = default);
-        Task<IEnumerable<string>> GetPendingMigration(CancellationToken cancellationToken = default);
-    }
+    Task ApplyMigrations(CancellationToken cancellationToken = default);
+    Task<IEnumerable<string>> GetPendingMigration(CancellationToken cancellationToken = default);
 }

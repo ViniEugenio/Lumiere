@@ -11,5 +11,6 @@ public static class InfrastructureExtensions
     {
         services.AddContext(configuration);
         services.AddRepositories();
+        services.AddSecurity();
     }
 }

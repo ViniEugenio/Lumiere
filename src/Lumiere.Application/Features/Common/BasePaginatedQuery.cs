@@ -1,13 +1,11 @@
-﻿using Lumiere.Application.DTOs;
+using Lumiere.Application.DTOs;
 using Lumiere.Domain.Common;
-using Lumiere.Domain.ValueObjects;
 using MediatR;
 
-namespace Lumiere.Application.Features.Common
+namespace Lumiere.Application.Features.Common;
+
+public record BasePaginatedQuery(int? Page, int? PageAmount) : IRequest<ResultDto<BasePaginationResult<UserPaginated>>>
 {
-    public record BasePaginatedQuery(int? Page, int? PageAmount) : IRequest<ResultDto<BasePaginationResult<UserPaginated>>>
-    {
-        public int? Page { get; private set; } = Page ?? 1;
-        public int? PageAmount { get; private set; } = PageAmount ?? 10;
-    }
+    public int? Page { get; private set; } = Page ?? 1;
+    public int? PageAmount { get; private set; } = PageAmount ?? 10;
 }

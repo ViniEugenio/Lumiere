@@ -1,17 +1,16 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Lumiere.Application.Behaviors;
+using Microsoft.Extensions.DependencyInjection;
 
-namespace Lumiere.Application.DependencyInjection
+namespace Lumiere.Application.DependencyInjection;
+
+public static class MediatrExtensions
 {
-    public static class MediatrExtensions
+    public static void AddMediatr(this IServiceCollection services)
     {
-
-        public static void AddMediatr(this IServiceCollection services)
+        services.AddMediatR(cfg =>
         {
-
-            services.AddMediatR(cfg =>
-                cfg.RegisterServicesFromAssembly(typeof(ApplicationExtensions).Assembly));
-
-        }
-
+            cfg.RegisterServicesFromAssembly(typeof(ApplicationExtensions).Assembly);
+            cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
+        });
     }
 }

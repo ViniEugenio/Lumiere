@@ -1,6 +1,8 @@
+using Lumiere.Application.Interfaces;
+
 namespace Lumiere.Application.DTOs;
 
-public class ResultDto<T>
+public class ResultDto<T> : IResultDto
 {
     private readonly List<string> _errors = [];
 

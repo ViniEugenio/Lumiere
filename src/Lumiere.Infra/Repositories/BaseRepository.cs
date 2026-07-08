@@ -11,8 +11,7 @@ public abstract class BaseRepository<TEntity>(AppDbContext context) : IBaseRepos
     protected readonly AppDbContext _context = context;
     protected readonly DbSet<TEntity> _dbSet = context.Set<TEntity>();
 
-    public async Task<IEnumerable<TEntity>> GetAllAsync(
-        params Expression<Func<TEntity, bool>>[] conditions)
+    public async Task<IEnumerable<TEntity>> GetAllAsync(CancellationToken cancellationToken, params Expression<Func<TEntity, bool>>[] conditions)
     {
         IQueryable<TEntity> query = _dbSet.AsNoTracking();
 
@@ -21,11 +20,10 @@ public abstract class BaseRepository<TEntity>(AppDbContext context) : IBaseRepos
             query = query.Where(condition);
         }
 
-        return await query.ToListAsync();
+        return await query.ToListAsync(cancellationToken);
     }
 
-    public async Task<TEntity?> GetAsync(
-        params Expression<Func<TEntity, bool>>[] conditions)
+    public async Task<TEntity?> GetAsync(CancellationToken cancellationToken, params Expression<Func<TEntity, bool>>[] conditions)
     {
         IQueryable<TEntity> query = _dbSet.AsNoTracking();
 
@@ -34,11 +32,10 @@ public abstract class BaseRepository<TEntity>(AppDbContext context) : IBaseRepos
             query = query.Where(condition);
         }
 
-        return await query.FirstOrDefaultAsync();
+        return await query.FirstOrDefaultAsync(cancellationToken);
     }
 
-    public async Task<bool> ExistsAsync(
-        params Expression<Func<TEntity, bool>>[] conditions)
+    public async Task<bool> ExistsAsync(CancellationToken cancellationToken, params Expression<Func<TEntity, bool>>[] conditions)
     {
         IQueryable<TEntity> query = _dbSet.AsNoTracking();
 
@@ -47,7 +44,7 @@ public abstract class BaseRepository<TEntity>(AppDbContext context) : IBaseRepos
             query = query.Where(condition);
         }
 
-        return await query.AnyAsync();
+        return await query.AnyAsync(cancellationToken);
     }
 
     public async Task AddAsync(TEntity entity, CancellationToken cancellationToken = default)
@@ -62,33 +59,26 @@ public abstract class BaseRepository<TEntity>(AppDbContext context) : IBaseRepos
         await _context.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task<BasePaginationResult<TResult>> GetAllPaginationAsync<TResult>(
-        int page,
-        int pageAmount,
-        Expression<Func<TEntity, bool>> filterExpression,
-        Expression<Func<TEntity, object>> orderByExpression,
-        Expression<Func<TEntity, TResult>> selectorExpression)
+    public async Task<BasePaginationResult<TResult>> GetAllPaginationAsync<TResult>(PaginationFilters<TEntity, TResult> filters, CancellationToken cancellationToken)
     {
-
         IQueryable<TEntity> query = _dbSet
             .AsNoTracking()
-            .Where(filterExpression);
+            .Where(filters.FilterExpression);
 
         int totalItems = await query
-            .CountAsync();
+            .CountAsync(cancellationToken);
 
-        int totalPages = (int)Math.Ceiling((decimal)totalItems / pageAmount);
+        int totalPages = (int)Math.Ceiling((decimal)totalItems / filters.PageAmount);
 
-        int skip = (page - 1) * pageAmount;
+        int skip = (filters.Page - 1) * filters.PageAmount;
 
         List<TResult> items = await query
-            .OrderBy(orderByExpression)
-            .Select(selectorExpression)
+            .OrderBy(filters.OrderByExpression)
+            .Select(filters.SelectorExpression)
             .Skip(skip)
-            .Take(pageAmount)
-            .ToListAsync();
+            .Take(filters.PageAmount)
+            .ToListAsync(cancellationToken);
 
-        return new BasePaginationResult<TResult>(page, pageAmount, totalPages, items);
-
+        return new BasePaginationResult<TResult>(filters.Page, filters.PageAmount, totalPages, items);
     }
 }

@@ -5,14 +5,13 @@ using Lumiere.Infra.DependencyInjection;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddSwaggerDocs();
+builder.Services.AddAPIExtensions();
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
-builder.Services.AddControllers();
 
 var app = builder.Build();
 
 app.UseSwaggerDocs();
-app.UseHttpsRedirection();
-app.MapControllers();
+app.AddAPIApplications();
 
 app.Run();

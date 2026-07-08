@@ -53,8 +53,8 @@ Lumiere/
 Responsável exclusivamente pela exposição da API. Não contém regras de negócio.
 
 **Regras:**
-- Utilizar **Minimal APIs**
-- Todas as rotas organizadas em endpoints separados por funcionalidade
+- Utilizar **Controllers do ASP.NET Core MVC** (não Minimal APIs) — motivo: rotas recebem objetos complexos via query string (ex: `GetUsersQuery` com `Name`, `Page`, `PageAmount`), e o model binder do MVC resolve isso nativamente sem precisar de `[AsParameters]` nem binders customizados
+- Todas as rotas organizadas em controllers separados por funcionalidade
 - Apenas receber requisições, validar entradas e encaminhar para a camada Application
 - Configurações de DI registradas nesta camada
 - Configurações de autenticação e autorização ficam nesta camada
@@ -62,7 +62,7 @@ Responsável exclusivamente pela exposição da API. Não contém regras de neg�
 **Estrutura:**
 ```
 Lumiere.API/
-├── Endpoints/
+├── Controllers/
 ├── Extensions/
 ├── Middlewares/
 ├── Configurations/
@@ -71,101 +71,112 @@ Lumiere.API/
 
 ---
 
-## Convenções de Minimal APIs
+## Convenções de Controllers
 
-### EndpointBase
+### BaseController
 
-Todos os endpoints devem herdar de `EndpointBase` (localizado em `Lumiere.API/Endpoints/EndpointBase.cs`).
+Todos os controllers devem herdar de `BaseController` (localizado em `Lumiere.API/Controllers/BaseController.cs`).
 
-`EndpointBase` provê o método `HandleResult<T>(ResultDto<T> result)` para padronizar as respostas:
-- Sucesso → `Results.Ok(result.Data)`
-- Falha → `Results.BadRequest(result.Errors)`
+`BaseController` recebe `ISender` via primary constructor e provê o método `Respond<T>(ResultDto<T> result)` para padronizar as respostas:
+- Sucesso → `Ok(result.Data)`
+- Falha → `BadRequest(result.Errors)`
 
 ```csharp
-public abstract class EndpointBase
+public abstract class BaseController(ISender sender) : Controller
 {
-    protected static IResult HandleResult<T>(ResultDto<T> result)
+    protected readonly ISender _sender = sender;
+
+    protected IActionResult Respond<T>(ResultDto<T> result)
     {
-        if (result.IsSuccess)
+        if (!result.Succeeded)
         {
-            return Results.Ok(result.Data);
+            return BadRequest(result.Errors);
         }
 
-        return Results.BadRequest(result.Errors);
+        return Ok(result.Data);
     }
 }
 ```
 
-Como `EndpointBase` é uma classe não-estática, as classes de endpoints também são não-estáticas e herdam dela. O método de mapeamento é estático mas **não é extension method** — o registro no `Program.cs` usa chamada direta: `UserEndpoints.MapUserEndpoints(apiRoutes)`.
+### Estrutura dos controllers
 
-### Estrutura dos endpoints
-
-Cada funcionalidade deve ter sua própria classe dentro de `Endpoints/`, herdando de `EndpointBase`:
+Cada funcionalidade deve ter seu próprio controller dentro de `Controllers/`, herdando de `BaseController` e decorado com `[Route("api/{resource}")]`:
 
 ```csharp
-public class UserEndpoints : EndpointBase
+[Route("api/user")]
+public class UserController(ISender sender) : BaseController(sender)
 {
-    public static IEndpointRouteBuilder MapUserEndpoints(IEndpointRouteBuilder endpoints)
+    [HttpGet]
+    public async Task<IActionResult> GetUsersQuery([FromQuery] GetUsersQuery query)
     {
-        var group = endpoints.MapGroup("users")
-            .RequireAuthorization();
+        var result = await _sender.Send(query);
+        return Respond(result);
+    }
 
-        group.MapGet("", GetAllUsers);
-        group.MapGet("{id}", GetUserById);
-        group.MapPost("", CreateUser);
-
-        return endpoints;
+    [HttpPost]
+    public async Task<IActionResult> CreateUser([FromBody] CreateUserCommand command)
+    {
+        var result = await _sender.Send(command);
+        return Respond(result);
     }
 }
-```
-
-### Registro no `Program.cs`
-
-Todos os grupos de endpoints são registrados sob o prefixo `api/`:
-
-```csharp
-var apiRoutes = app.MapGroup("api/");
-UserEndpoints.MapUserEndpoints(apiRoutes);
-```
-
-### Handlers (delegates)
-
-Os handlers são métodos estáticos privados dentro da mesma classe do grupo. Parâmetros são resolvidos pelo model binding do ASP.NET Core:
-
-```csharp
-private static async Task<IResult> CreateUser(
-    [FromServices] ISender sender,
-    [FromBody] CreateUserCommand command,
-    CancellationToken ct)
-{
-    var result = await sender.Send(command, ct);
-    return HandleResult(result);
-}
-```
-
-**Origens de parâmetros:**
-- `[FromServices]` — serviços injetados via DI
-- `[FromRoute]` — parâmetros de rota
-- `[FromQuery]` — parâmetros de query string
-- `[FromBody]` — corpo da requisição
-- `CancellationToken` — fornecido automaticamente pelo pipeline
-
-### Documentação OpenAPI
-
-Usar `[Tags]` para agrupar endpoints no Swagger e `.Produces()` para documentar os possíveis retornos:
-
-```csharp
-group.MapPost("", CreateUser)
-    .WithTags("Users")
-    .Produces(StatusCodes.Status200OK, typeof(UserDto))
-    .Produces(StatusCodes.Status400BadRequest)
-    .Produces(StatusCodes.Status401Unauthorized)
-    .Produces(StatusCodes.Status403Forbidden);
 ```
 
 **Regras:**
-- `.Produces()` é apenas documentação — não valida nem força o retorno em tempo de execução
-- Endpoints com `RequireAuthorization()` devem documentar `401` e `403`
+- Rota base do controller sempre com prefixo `api/` — ex: `[Route("api/user")]`
+- Métodos de ação são assíncronos e retornam `Task<IActionResult>`
+- O corpo do método só deve enviar o request via `_sender.Send()` e repassar o resultado para `Respond()` — nenhuma lógica de negócio no controller
+
+### Registro no `Program.cs`
+
+Controllers são registrados via extension methods próprios da camada API (`Extensions/APIExtensions.cs`):
+
+```csharp
+public static class APIExtensions
+{
+    public static void AddAPIExtensions(this IServiceCollection services)
+    {
+        services.AddControllers();
+    }
+
+    public static void AddAPIApplications(this WebApplication app)
+    {
+        app.UseHttpsRedirection();
+        app.MapControllers();
+    }
+}
+```
+
+```csharp
+builder.Services.AddAPIExtensions();
+// ...
+app.AddAPIApplications();
+```
+
+### Origens de parâmetros
+
+- `[FromServices]` — serviços injetados via DI (prefira injetar no construtor sempre que possível)
+- `[FromRoute]` — parâmetros de rota
+- `[FromQuery]` — parâmetros de query string (suporta objetos complexos nativamente, ex: `GetUsersQuery`)
+- `[FromBody]` — corpo da requisição
+- `CancellationToken` — fornecido automaticamente pelo pipeline quando declarado como parâmetro da action
+
+### Documentação OpenAPI
+
+Usar `[Tags]` no controller para agrupar endpoints no Swagger e `[ProducesResponseType]` para documentar os possíveis retornos:
+
+```csharp
+[Tags("Users")]
+[ProducesResponseType(typeof(UserDto), StatusCodes.Status200OK)]
+[ProducesResponseType(StatusCodes.Status400BadRequest)]
+[ProducesResponseType(StatusCodes.Status401Unauthorized)]
+[ProducesResponseType(StatusCodes.Status403Forbidden)]
+public class UserController(ISender sender) : BaseController(sender)
+```
+
+**Regras:**
+- `[ProducesResponseType]` é apenas documentação — não valida nem força o retorno em tempo de execução
+- Controllers com `[Authorize]` devem documentar `401` e `403`
 - A tag deve corresponder ao nome do recurso (ex: `"Users"`, `"Products"`)
 
 ---
@@ -180,7 +191,8 @@ Responsável pelas regras centrais do domínio.
 - Todas as entidades ficam nesta camada
 - Todas as interfaces dos repositórios ficam nesta camada
 - Value Objects, Enums e Exceptions de domínio ficam nesta camada
-- Tipos compartilhados de infraestrutura interna do domínio (ex: `Result<T>`, `PagedResult<T>`) ficam em `Domain/Common` — devem ser POCOs puros, sem dependência externa
+- Tipos compartilhados de infraestrutura interna do domínio, sem semântica de negócio própria (ex: `BasePaginationResult<T>`) ficam em `Domain/Common` — devem ser POCOs puros, sem dependência externa. Padrões de comunicação de sucesso/erro de um caso de uso (ex: `ResultDto<T>`) são responsabilidade da Application, não do Domain — ficam em `Application/DTOs`
+- Projeções específicas de um caso de uso (shapes de leitura como `UserPaginated`, usados só pra formatar a resposta de uma query) não são Value Objects de domínio — ficam em `Application/DTOs`, nunca em `Domain/ValueObjects`
 - Sem exceções: nenhuma entidade do Domain deve herdar de classes de framework (ex: ASP.NET Core Identity). O projeto não usa ASP.NET Core Identity — autenticação/gerenciamento de usuário é responsabilidade própria, implementada via Infra (hashing de senha, etc.), nunca vazando pro Domain
 
 **Estrutura:**
@@ -189,6 +201,7 @@ Lumiere.Domain/
 ├── Entities/
 ├── Interfaces/
 ├── ValueObjects/
+├── Common/
 ├── Enums/
 └── Exceptions/
 ```
@@ -217,6 +230,7 @@ Responsável pelos casos de uso da aplicação.
 ```
 Lumiere.Application/
 ├── DTOs/
+├── Interfaces/
 ├── Features/
 │   └── Users/
 │       ├── Commands/
@@ -229,6 +243,8 @@ Lumiere.Application/
 ├── Validators/
 └── DependencyInjection/
 ```
+
+**Regra de `DTOs/` vs `Interfaces/`:** `DTOs/` contém apenas tipos concretos de transporte de dado (records/classes, ex: `ResultDto<T>`, `UserPaginated`). Contratos/abstrações que esses DTOs implementam (ex: `IResultDto`, usado pelo `ValidationBehavior` via generics) ficam em `Interfaces/` — mesma separação que o Domain já usa entre `Entities/` e `Interfaces/`. Não confundir com `Services/Interfaces/`, que é especificamente pra contratos de Service.
 
 ---
 
@@ -251,6 +267,7 @@ Lumiere.Infra/
 ├── Mappings/
 ├── Repositories/
 ├── Migrations/
+├── Security/
 └── DependencyInjection/
 ```
 
@@ -284,20 +301,31 @@ Cada entidade possui seu próprio repositório. Todos herdam de um repositório 
 **IBaseRepository\<TEntity\>** disponibiliza:
 ```csharp
 Task<IEnumerable<TEntity>> GetAllAsync(
+    CancellationToken cancellationToken,
     params Expression<Func<TEntity, bool>>[] conditions);
 
 Task<TEntity?> GetAsync(
+    CancellationToken cancellationToken,
     params Expression<Func<TEntity, bool>>[] conditions);
 
-Task AddAsync(TEntity entity);
+Task<bool> ExistsAsync(
+    CancellationToken cancellationToken,
+    params Expression<Func<TEntity, bool>>[] conditions);
 
-Task UpdateAsync(TEntity entity);
+Task AddAsync(TEntity entity, CancellationToken cancellationToken = default);
+
+Task UpdateAsync(TEntity entity, CancellationToken cancellationToken = default);
+
+Task<BasePaginationResult<TResult>> GetAllPaginationAsync<TResult>(
+    PaginationFilters<TEntity, TResult> filters,
+    CancellationToken cancellationToken);
 ```
 
 **Regras:**
-- `GetAll` e `Get` aceitam múltiplas condições aplicadas dinamicamente
+- `GetAll`, `Get` e `Exists` aceitam múltiplas condições aplicadas dinamicamente
 - Utilizar `IQueryable` para composição das consultas
-- Todas as operações são assíncronas
+- Todas as operações são assíncronas e recebem `CancellationToken`
+- Paginação usa `PaginationFilters<TEntity, TResult>`/`BasePaginationResult<TResult>` (`Domain/Common`) em vez de parâmetros primitivos soltos
 - Nunca realizar queries dentro de loops
 
 ---
@@ -586,8 +614,13 @@ Nenhuma camada deve violar as dependências estabelecidas pela Clean Architectur
 ### User
 - Entidade própria do Domain, sem herdar de nenhuma classe de framework — herda `BaseEntity` e não depende de nenhum pacote do ASP.NET Core Identity
 - Campos: `Id`, `FirstName`, `LastName`, `Email`, `PasswordHash`, mais os herdados de `BaseEntity`
-- `PasswordHash` é um primitivo (`string`) calculado e atribuído inteiramente pela Infra (hashing próprio, sem depender de nenhum pacote `Microsoft.AspNetCore.Identity*`) — o Domain só armazena o valor, nunca conhece o algoritmo
+- `PasswordHash` é um primitivo (`string`); o Domain só armazena o valor, nunca conhece o algoritmo
 - Não existe pacote de Identity referenciado em nenhuma camada da solução (Domain, Application, Infra ou API)
+
+### Hashing de senha (`IPasswordHasher`)
+- O algoritmo de hash (hoje PBKDF2, sem depender de `Microsoft.AspNetCore.Identity*`) fica atrás da interface `IPasswordHasher` (`Domain/Interfaces/IPasswordHasher.cs`), implementada em `Lumiere.Infra/Security/PasswordHasher.cs`
+- **Quem decide chamar o hash é o Handler**, não o Repositório — ex: `CreateUserCommandHandler` injeta `IPasswordHasher`, chama `passwordHasher.Hash(request.Password)` e faz `user.SetPassword(...)` antes de persistir. Repositórios ficam responsáveis exclusivamente por persistência (`AddAsync`, `UpdateAsync`, etc.), nunca por aplicar políticas de segurança
+- Isso torna a regra "senha sempre é hasheada antes de salvar" visível e testável na camada de Use Case, em vez de escondida dentro de uma implementação concreta de repositório
 
 ---
 

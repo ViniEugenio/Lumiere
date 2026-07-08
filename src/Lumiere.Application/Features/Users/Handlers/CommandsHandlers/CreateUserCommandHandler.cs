@@ -7,7 +7,7 @@ using MediatR;
 
 namespace Lumiere.Application.Features.Users.Handlers.CommandsHandlers;
 
-public class CreateUserCommandHandler(IUserRepository userRepository)
+public class CreateUserCommandHandler(IUserRepository userRepository, IPasswordHasher passwordHasher)
     : IRequestHandler<CreateUserCommand, ResultDto<object>>
 {
     public async Task<ResultDto<object>> Handle(CreateUserCommand request, CancellationToken cancellationToken)
@@ -20,8 +20,9 @@ public class CreateUserCommandHandler(IUserRepository userRepository)
         }
 
         var user = User.Create(request.FirstName, request.LastName, request.Email);
+        user.SetPassword(passwordHasher.Hash(request.Password));
 
-        await userRepository.CreateUserAsync(user, request.Password, cancellationToken);
+        await userRepository.AddAsync(user, cancellationToken);
 
         return new ResultDto<object>();
     }
@@ -32,7 +33,8 @@ public class CreateUserCommandHandler(IUserRepository userRepository)
     {
         var result = new ResultDto<object>();
 
-        var emailExists = await userRepository.ExistsAsync(user => user.Email == command.Email);
+        var emailExists = await userRepository
+            .ExistsAsync(cancellationToken, user => user.Email == command.Email);
 
         if (emailExists)
         {

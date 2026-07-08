@@ -1,13 +1,10 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
 
-namespace Lumiere.Application.DependencyInjection
+namespace Lumiere.Application.DependencyInjection;
+
+public static class ServicesExtensions
 {
-    public static class ServicesExtensions
+    public static void AddServices(this IServiceCollection services)
     {
-
-        public static void AddServices(this IServiceCollection services)
-        {
-        }
-
     }
 }

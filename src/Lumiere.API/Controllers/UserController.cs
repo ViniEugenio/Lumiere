@@ -1,26 +1,26 @@
 ﻿using Lumiere.Application.DTOs;
+using Lumiere.Application.Features.Users.Commands;
 using Lumiere.Application.Features.Users.Queries;
 using Lumiere.Domain.Common;
-using Lumiere.Domain.ValueObjects;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Lumiere.API.Controllers
+namespace Lumiere.API.Controllers;
+
+[Route("api/user")]
+public class UserController(ISender sender) : BaseController(sender)
 {
-    [Route("user")]
-    public class UserController(ISender sender) : Controller
+    [HttpGet]
+    public async Task<IActionResult> GetUsersQuery([FromQuery] GetUsersQuery query)
     {
+        ResultDto<BasePaginationResult<UserPaginated>> result = await _sender.Send(query);
+        return Respond(result);
+    }
 
-        private readonly ISender _sender = sender;
-
-        [HttpGet]
-        public async Task<IActionResult> GetUsersQuery([FromQuery] GetUsersQuery query)
-        {
-            
-            ResultDto<BasePaginationResult<UserPaginated>> result = await _sender.Send(query);
-            return Ok(result);
-
-        }
-
+    [HttpPost]
+    public async Task<IActionResult> CreateUser([FromBody] CreateUserCommand command)
+    {
+        var result = await _sender.Send(command);
+        return Respond(result);
     }
 }

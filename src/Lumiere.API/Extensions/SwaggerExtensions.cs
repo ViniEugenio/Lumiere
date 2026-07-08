@@ -18,7 +18,7 @@ public static class SwaggerExtensions
         }
 
         app.UseSwagger();
-        app.UseSwaggerUI();        
+        app.UseSwaggerUI();
 
         return app;
     }

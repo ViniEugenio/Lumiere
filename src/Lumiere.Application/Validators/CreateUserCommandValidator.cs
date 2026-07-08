@@ -1,5 +1,6 @@
 using FluentValidation;
 using Lumiere.Application.Features.Users.Commands;
+using Lumiere.Application.Resources;
 
 namespace Lumiere.Application.Validators;
 
@@ -8,29 +9,33 @@ public class CreateUserCommandValidator : AbstractValidator<CreateUserCommand>
     public CreateUserCommandValidator()
     {
         RuleFor(command => command.FirstName)
-            .NotEmpty();
+            .NotEmpty()
+            .WithMessage(Errors.FirstNameRequired);
 
         RuleFor(command => command.LastName)
-            .NotEmpty();
+            .NotEmpty()
+            .WithMessage(Errors.LastNameRequired);
 
         RuleFor(command => command.Email)
             .NotEmpty()
-            .EmailAddress();
+            .EmailAddress()
+            .WithMessage(Errors.EmailInvalid);
 
         RuleFor(command => command.ConfirmEmail)
             .NotEmpty()
-            .Equal(command => command.Email).WithMessage("ConfirmEmail must match Email.");
+            .Equal(command => command.Email)
+            .WithMessage(Errors.ConfirmEmail);
 
         RuleFor(command => command.Password)
             .NotEmpty()
             .MinimumLength(6)
-            .Matches(@"[A-Z]").WithMessage("Password must contain at least one uppercase letter.")
-            .Matches(@"[a-z]").WithMessage("Password must contain at least one lowercase letter.")
-            .Matches(@"[0-9]").WithMessage("Password must contain at least one digit.")
-            .Matches(@"[^a-zA-Z0-9]").WithMessage("Password must contain at least one non-alphanumeric character.");
+            .Matches(@"[A-Z]").WithMessage(Errors.PasswordUppercase)
+            .Matches(@"[a-z]").WithMessage(Errors.PasswordLowercase)
+            .Matches(@"[0-9]").WithMessage(Errors.PasswordLeastOneDigit)
+            .Matches(@"[^a-zA-Z0-9]").WithMessage(Errors.PasswordNonAlphanumeric);
 
         RuleFor(command => command.ConfirmPassword)
             .NotEmpty()
-            .Equal(command => command.Password).WithMessage("ConfirmPassword must match Password.");
+            .Equal(command => command.Password).WithMessage(Errors.ConfirmPassword);
     }
 }
