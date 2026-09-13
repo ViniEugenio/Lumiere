@@ -1,7 +1,7 @@
 using Lumiere.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace Lumiere.Infra.Context;
+namespace Lumiere.Infra.Data;
 
 public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
 {

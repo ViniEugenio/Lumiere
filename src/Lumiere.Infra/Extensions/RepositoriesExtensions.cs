@@ -1,5 +1,5 @@
 using Lumiere.Domain.Interfaces;
-using Lumiere.Infra.Repositories;
+using Lumiere.Infra.Persistence.Repositories;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Lumiere.Infra.Extensions;

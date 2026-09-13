@@ -1,4 +1,4 @@
-using Lumiere.Infra.Context;
+using Lumiere.Infra.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;

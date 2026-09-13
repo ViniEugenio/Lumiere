@@ -1,8 +1,8 @@
 using Lumiere.Domain.Interfaces;
-using Lumiere.Infra.Context;
+using Lumiere.Infra.Data;
 using Microsoft.EntityFrameworkCore;
 
-namespace Lumiere.Infra.Repositories;
+namespace Lumiere.Infra.Persistence.Repositories;
 
 public class DataBaseRepository(AppDbContext context) : IDataBaseRepository
 {

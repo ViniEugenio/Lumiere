@@ -1,7 +1,6 @@
 using FluentValidation;
 using FluentValidation.Results;
 using Lumiere.Application.DTOs.Results;
-using Lumiere.Application.Features.Users.CreateUser;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -28,7 +27,7 @@ public static class MediatrExtensions
         public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
         {
 
-            ValidationContext<TRequest> validationContext = new ValidationContext<TRequest>(request);
+            ValidationContext<TRequest> validationContext = new(request);
             ValidationResult validationResult = await validator.ValidateAsync(validationContext, cancellationToken);
 
             if(!validationResult.IsValid)

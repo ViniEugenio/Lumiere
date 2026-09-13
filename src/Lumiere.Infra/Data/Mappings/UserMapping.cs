@@ -2,7 +2,7 @@ using Lumiere.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Lumiere.Infra.Mappings;
+namespace Lumiere.Infra.Data.Mappings;
 
 public class UserMapping : IEntityTypeConfiguration<User>
 {
