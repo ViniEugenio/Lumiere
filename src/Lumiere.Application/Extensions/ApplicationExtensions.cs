@@ -1,6 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Lumiere.Application.DependencyInjection;
+namespace Lumiere.Application.Extensions;
 
 public static class ApplicationExtensions
 {

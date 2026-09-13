@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Lumiere.Infra.DependencyInjection;
+namespace Lumiere.Infra.Extensions;
 
 public static class ContextExtensions
 {

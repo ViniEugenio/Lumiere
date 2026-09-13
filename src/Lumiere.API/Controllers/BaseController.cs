@@ -1,4 +1,4 @@
-﻿using Lumiere.Application.DTOs;
+﻿using Lumiere.Application.DTOs.Results;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -8,13 +8,17 @@ public abstract class BaseController(ISender sender) : Controller
 {
     protected readonly ISender _sender = sender;
 
-    protected IActionResult Respond<T>(ResultDto<T> result)
+    protected async Task<IActionResult> Respond(IRequest<ResultDto> request)
     {
-        if (!result.Succeeded)
+
+        ResultDto response = await _sender.Send(request);
+
+        if(!response.IsValid())
         {
-            return BadRequest(result.Errors);
+            return BadRequest(response);
         }
 
-        return Ok(result.Data);
+        return Ok(response);
+
     }
 }

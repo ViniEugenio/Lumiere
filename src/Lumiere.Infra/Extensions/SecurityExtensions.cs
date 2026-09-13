@@ -2,7 +2,7 @@ using Lumiere.Domain.Interfaces;
 using Lumiere.Infra.Security;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Lumiere.Infra.DependencyInjection;
+namespace Lumiere.Infra.Extensions;
 
 public static class SecurityExtensions
 {

@@ -1,4 +1,3 @@
-using Lumiere.Domain.Common;
 using Lumiere.Domain.Interfaces;
 using Lumiere.Infra.Context;
 using Microsoft.EntityFrameworkCore;
@@ -47,38 +46,16 @@ public abstract class BaseRepository<TEntity>(AppDbContext context) : IBaseRepos
         return await query.AnyAsync(cancellationToken);
     }
 
-    public async Task AddAsync(TEntity entity, CancellationToken cancellationToken = default)
+    public async Task AddAsync(TEntity entity, CancellationToken cancellationToken)
     {
         await _dbSet.AddAsync(entity, cancellationToken);
         await _context.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task UpdateAsync(TEntity entity, CancellationToken cancellationToken = default)
+    public async Task UpdateAsync(TEntity entity, CancellationToken cancellationToken)
     {
         _dbSet.Update(entity);
         await _context.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task<BasePaginationResult<TResult>> GetAllPaginationAsync<TResult>(PaginationFilters<TEntity, TResult> filters, CancellationToken cancellationToken)
-    {
-        IQueryable<TEntity> query = _dbSet
-            .AsNoTracking()
-            .Where(filters.FilterExpression);
-
-        int totalItems = await query
-            .CountAsync(cancellationToken);
-
-        int totalPages = (int)Math.Ceiling((decimal)totalItems / filters.PageAmount);
-
-        int skip = (filters.Page - 1) * filters.PageAmount;
-
-        List<TResult> items = await query
-            .OrderBy(filters.OrderByExpression)
-            .Select(filters.SelectorExpression)
-            .Skip(skip)
-            .Take(filters.PageAmount)
-            .ToListAsync(cancellationToken);
-
-        return new BasePaginationResult<TResult>(filters.Page, filters.PageAmount, totalPages, items);
-    }
 }

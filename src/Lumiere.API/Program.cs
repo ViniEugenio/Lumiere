@@ -1,6 +1,6 @@
 using Lumiere.API.Extensions;
-using Lumiere.Application.DependencyInjection;
-using Lumiere.Infra.DependencyInjection;
+using Lumiere.Application.Extensions;
+using Lumiere.Infra.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 

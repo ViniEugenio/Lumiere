@@ -2,7 +2,7 @@ using Lumiere.Domain.Interfaces;
 using Lumiere.Infra.Repositories;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Lumiere.Infra.DependencyInjection;
+namespace Lumiere.Infra.Extensions;
 
 public static class RepositoriesExtensions
 {
