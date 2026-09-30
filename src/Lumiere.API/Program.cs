@@ -6,6 +6,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddSwaggerDocs();
 builder.Services.AddAPIExtensions();
+builder.Services.AddEnvConfigurations(builder.Configuration);
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 

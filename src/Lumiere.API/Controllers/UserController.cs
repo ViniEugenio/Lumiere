@@ -1,4 +1,4 @@
-﻿using Lumiere.Application.Features.Users.CreateUser;
+﻿using Lumiere.Application.Features.Commands.Users.CreateUser;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 

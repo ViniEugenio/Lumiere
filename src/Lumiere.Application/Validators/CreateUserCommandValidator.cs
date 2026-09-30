@@ -1,5 +1,6 @@
 ﻿using FluentValidation;
-using Lumiere.Application.Features.Users.CreateUser;
+using Lumiere.Application.Features.Commands.Users.CreateUser;
+using Lumiere.Application.Interfaces.Repositories;
 using Lumiere.Application.Resources;
 
 namespace Lumiere.Application.Validators
@@ -7,8 +8,12 @@ namespace Lumiere.Application.Validators
     public class CreateUserCommandValidator : AbstractValidator<CreateUserCommand>
     {
 
-        public CreateUserCommandValidator()
+        private readonly IUserRepository _userRepository;
+
+        public CreateUserCommandValidator(IUserRepository userRepository)
         {
+
+            _userRepository = userRepository;
 
             RuleFor(command => command.FirstName)
                 .NotEmpty()
@@ -21,7 +26,9 @@ namespace Lumiere.Application.Validators
             RuleFor(command => command.Email)
                 .NotEmpty()
                 .EmailAddress()
-                .WithMessage(Errors.EmailInvalid);
+                .WithMessage(Errors.EmailInvalid)
+                .MustAsync(ValidateEmailInUse)
+                .WithMessage(Errors.EmailAlreadyInUse);
 
             RuleFor(command => command.Password)
                 .NotEmpty()
@@ -38,6 +45,19 @@ namespace Lumiere.Application.Validators
             RuleFor(command => command.ConfirmPassword)
                 .NotEmpty()
                 .Equal(command => command.Password).WithMessage(Errors.ConfirmPassword);
+
+        }
+
+        private async Task<bool> ValidateEmailInUse(string email, CancellationToken cancellationToken)
+        {
+
+            return !await _userRepository
+                .ExistsAsync(
+
+                    cancellationToken, 
+                    user => user.Email == email
+                    
+                );
 
         }
 

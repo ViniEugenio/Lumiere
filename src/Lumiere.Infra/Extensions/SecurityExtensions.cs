@@ -1,4 +1,4 @@
-using Lumiere.Domain.Interfaces;
+using Lumiere.Application.Interfaces.Services;
 using Lumiere.Infra.Security;
 using Microsoft.Extensions.DependencyInjection;
 

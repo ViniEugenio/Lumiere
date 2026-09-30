@@ -1,4 +1,4 @@
-namespace Lumiere.Domain.Interfaces;
+namespace Lumiere.Application.Interfaces.Repositories;
 
 public interface IDataBaseRepository
 {

@@ -4,32 +4,28 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Lumiere.Infra.Data.Mappings;
 
-public class ChannelMapping : IEntityTypeConfiguration<Channel>
+public class ChannelMapping : BaseMapping<Channel>
 {
-    public void Configure(EntityTypeBuilder<Channel> builder)
+    public override void Configure(EntityTypeBuilder<Channel> builder)
     {
-        builder.ToTable("Channels");
 
-        builder.HasKey(channel => channel.Id);
-        builder.Property(channel => channel.Id).ValueGeneratedOnAdd();
+        base
+            .Configure(builder);
 
-        builder.Property(channel => channel.Name)
-            .IsRequired()
-            .HasMaxLength(100);
+        builder
+            .Property(channel => channel.Name)
+            .HasColumnType("nvarchar(255)")
+            .IsRequired();
 
-        builder.Property(channel => channel.Description)
-            .HasMaxLength(250);
+        builder
+            .Property(channel => channel.Description)
+            .HasColumnType("nvarchar(4000)")
+            .IsRequired();
 
-        builder.Property(channel => channel.CreatedAt)
-            .IsRequired()
-            .HasColumnType("datetime2");
+        builder
+            .HasOne(channel => channel.User)
+            .WithMany(user => user.Channels)
+            .HasForeignKey(channel => channel.UserId);
 
-        builder.Property(channel => channel.UpdatedAt)
-            .HasColumnType("datetime2");
-
-        builder.Property(channel => channel.Active)
-            .IsRequired()
-            .HasColumnType("bit")
-            .HasDefaultValue(true);
     }
 }

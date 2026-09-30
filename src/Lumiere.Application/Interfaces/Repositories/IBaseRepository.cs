@@ -1,6 +1,6 @@
 using System.Linq.Expressions;
 
-namespace Lumiere.Domain.Interfaces;
+namespace Lumiere.Application.Interfaces.Repositories;
 
 public interface IBaseRepository<TEntity> where TEntity : class
 {

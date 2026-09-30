@@ -1,9 +1,8 @@
-using Lumiere.Domain.Interfaces;
-using Lumiere.Infra.Data;
+using Lumiere.Application.Interfaces.Repositories;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 
-namespace Lumiere.Infra.Persistence.Repositories;
+namespace Lumiere.Infra.Data.Repositories;
 
 public abstract class BaseRepository<TEntity>(AppDbContext context) : IBaseRepository<TEntity> where TEntity : class
 {

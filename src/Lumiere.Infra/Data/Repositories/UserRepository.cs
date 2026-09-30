@@ -1,8 +1,7 @@
+using Lumiere.Application.Interfaces.Repositories;
 using Lumiere.Domain.Entities;
-using Lumiere.Domain.Interfaces;
-using Lumiere.Infra.Data;
 
-namespace Lumiere.Infra.Persistence.Repositories;
+namespace Lumiere.Infra.Data.Repositories;
 
 public class UserRepository(AppDbContext context) : BaseRepository<User>(context), IUserRepository
 {
