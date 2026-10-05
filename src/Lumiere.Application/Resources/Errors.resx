@@ -141,6 +141,9 @@
   <data name="LastNameRequired" xml:space="preserve">
     <value>Last name is required.</value>
   </data>
+  <data name="LoginInvalid" xml:space="preserve">
+    <value>Email or Password incorrect.</value>
+  </data>
   <data name="PasswordLeastOneDigit" xml:space="preserve">
     <value>Password must contain at least one digit.</value>
   </data>
@@ -149,6 +152,9 @@
   </data>
   <data name="PasswordNonAlphanumeric" xml:space="preserve">
     <value>Password must contain at least one non-alphanumeric character.</value>
+  </data>
+  <data name="PasswordRequired" xml:space="preserve">
+    <value>Password is required.</value>
   </data>
   <data name="PasswordUppercase" xml:space="preserve">
     <value>Password must contain at least one uppercase letter.</value>

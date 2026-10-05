@@ -52,11 +52,10 @@ namespace Lumiere.Application.Validators
         {
 
             return !await _userRepository
-                .ExistsAsync(
+                .Exists(cancellationToken, user =>
+                
+                    user.Email == email
 
-                    cancellationToken, 
-                    user => user.Email == email
-                    
                 );
 
         }

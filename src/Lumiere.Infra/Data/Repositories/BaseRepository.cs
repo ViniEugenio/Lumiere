@@ -9,8 +9,9 @@ public abstract class BaseRepository<TEntity>(AppDbContext context) : IBaseRepos
     protected readonly AppDbContext _context = context;
     protected readonly DbSet<TEntity> _dbSet = context.Set<TEntity>();
 
-    public async Task<IEnumerable<TEntity>> GetAllAsync(CancellationToken cancellationToken, params Expression<Func<TEntity, bool>>[] conditions)
+    public IQueryable<TEntity> Get(params Expression<Func<TEntity, bool>>[] conditions)
     {
+
         IQueryable<TEntity> query = _dbSet.AsNoTracking();
 
         foreach (var condition in conditions)
@@ -18,23 +19,13 @@ public abstract class BaseRepository<TEntity>(AppDbContext context) : IBaseRepos
             query = query.Where(condition);
         }
 
-        return await query.ToListAsync(cancellationToken);
+        return query;
+
     }
 
-    public async Task<TEntity?> GetAsync(CancellationToken cancellationToken, params Expression<Func<TEntity, bool>>[] conditions)
+    public async Task<bool> Exists(CancellationToken cancellationToken, params Expression<Func<TEntity, bool>>[] conditions)
     {
-        IQueryable<TEntity> query = _dbSet.AsNoTracking();
 
-        foreach (var condition in conditions)
-        {
-            query = query.Where(condition);
-        }
-
-        return await query.FirstOrDefaultAsync(cancellationToken);
-    }
-
-    public async Task<bool> ExistsAsync(CancellationToken cancellationToken, params Expression<Func<TEntity, bool>>[] conditions)
-    {
         IQueryable<TEntity> query = _dbSet.AsNoTracking();
 
         foreach (var condition in conditions)
@@ -43,15 +34,16 @@ public abstract class BaseRepository<TEntity>(AppDbContext context) : IBaseRepos
         }
 
         return await query.AnyAsync(cancellationToken);
+
     }
 
-    public async Task AddAsync(TEntity entity, CancellationToken cancellationToken)
+    public async Task Add(TEntity entity, CancellationToken cancellationToken)
     {
         await _dbSet.AddAsync(entity, cancellationToken);
         await _context.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task UpdateAsync(TEntity entity, CancellationToken cancellationToken)
+    public async Task Update(TEntity entity, CancellationToken cancellationToken)
     {
         _dbSet.Update(entity);
         await _context.SaveChangesAsync(cancellationToken);

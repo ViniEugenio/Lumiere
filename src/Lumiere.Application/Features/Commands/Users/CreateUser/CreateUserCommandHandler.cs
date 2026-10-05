@@ -8,7 +8,7 @@ namespace Lumiere.Application.Features.Commands.Users.CreateUser
 {
     public class CreateUserCommandHandler(
         IUserRepository userRepository, 
-        IPasswordHasher passwordHasher) : IRequestHandler<CreateUserCommand, ResultDto>
+        IPasswordService passwordService) : IRequestHandler<CreateUserCommand, ResultDto>
     {
 
         private readonly IUserRepository _userRepository = userRepository;
@@ -16,10 +16,10 @@ namespace Lumiere.Application.Features.Commands.Users.CreateUser
         public async Task<ResultDto> Handle(CreateUserCommand command, CancellationToken cancellationToken)
         {
 
-            string passwordHash = passwordHasher.Hash(command.Password);
+            string passwordHash = passwordService.Hash(command.Password);
 
             User user = User.Create(command.FirstName, command.LastName, command.Email, passwordHash);
-            await _userRepository.AddAsync(user, cancellationToken);
+            await _userRepository.Add(user, cancellationToken);
 
             ResultDto result = new();
             CreateUserResultDto data = new(user.Id, user.FirstName, user.LastName);

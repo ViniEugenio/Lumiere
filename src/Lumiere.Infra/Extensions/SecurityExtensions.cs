@@ -8,6 +8,6 @@ public static class SecurityExtensions
 {
     public static void AddSecurity(this IServiceCollection services)
     {
-        services.AddScoped<IPasswordHasher, PasswordHasher>();
+        services.AddScoped<IPasswordService, PasswordService>();
     }
 }

@@ -42,4 +42,11 @@ internal static class Errors
 
     internal static string InvalidPageAmount =>
         _resourceManager.GetString(nameof(InvalidPageAmount))!;
+
+    internal static string PasswordRequired =>
+        _resourceManager.GetString(nameof(PasswordRequired))!;
+
+    internal static string LoginInvalid =>
+        _resourceManager.GetString(nameof(LoginInvalid))!;
+
 }
