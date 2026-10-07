@@ -9,5 +9,6 @@ public static class SecurityExtensions
     public static void AddSecurity(this IServiceCollection services)
     {
         services.AddScoped<IPasswordService, PasswordService>();
+        services.AddScoped<IJWTService, JWTService>();
     }
 }

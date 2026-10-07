@@ -129,6 +129,9 @@
   <data name="EmailInvalid" xml:space="preserve">
     <value>Email must be a valid email address.</value>
   </data>
+  <data name="EmailRequired" xml:space="preserve">
+    <value>Email is required</value>
+  </data>
   <data name="FirstNameRequired" xml:space="preserve">
     <value>First name is required.</value>
   </data>

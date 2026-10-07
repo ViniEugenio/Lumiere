@@ -17,7 +17,7 @@ namespace Lumiere.Infra.Security
 
             JWTConfigurationModel jwtConfiguration = securityModelOptions
                 .Value
-                .JWTConfiguration;
+                .JWTConfigurations;
 
             SecurityTokenDescriptor tokenDescriptor = FormatSecurityTokenDescriptor(jwtConfiguration, jwtUserData);
 

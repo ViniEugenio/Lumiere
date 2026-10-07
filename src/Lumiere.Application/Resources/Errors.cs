@@ -49,4 +49,7 @@ internal static class Errors
     internal static string LoginInvalid =>
         _resourceManager.GetString(nameof(LoginInvalid))!;
 
+    internal static string EmailRequired =>
+        _resourceManager.GetString(nameof(EmailRequired));
+
 }

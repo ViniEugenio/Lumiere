@@ -19,7 +19,9 @@ namespace Lumiere.Application.Features.Commands.Users.Login
             string jwt = jwtService.GenerateJWT(jwtUserData);
 
             ResultDto result = new();
-            result.SetData(jwt);
+
+            LoginResultDto loginResult = new(jwt, DateTime.UtcNow);
+            result.SetData(loginResult);
 
             return result;
 

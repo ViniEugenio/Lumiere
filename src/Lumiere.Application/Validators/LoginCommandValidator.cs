@@ -21,8 +21,7 @@ namespace Lumiere.Application.Validators
 
             RuleFor(command => command.Email)
                 .NotEmpty()
-                .EmailAddress()
-                .WithMessage(Errors.EmailInvalid);
+                .WithMessage(Errors.EmailRequired);
 
             RuleFor(command => command.Password)
                 .NotEmpty()
